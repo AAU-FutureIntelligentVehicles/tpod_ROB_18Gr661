@@ -20,8 +20,9 @@ import hdbscan
 import pathlib
 import HOG_lib
 import mahotas
+import matplotlib.patches as mpatches
 
-def slide_window_helper(img, x_start_stop=[None, None], y_start_stop=[None, None], window_size=[5, 5]):
+def slide_window_helper(img, x_start_stop=[None, None], y_start_stop=[None, None], window_size=[32, 32]):
     window_size_x = window_size[0]
     window_size_y = window_size[1]
     xy_overlap=(0, 0)
@@ -67,13 +68,50 @@ def slide_window_helper(img, x_start_stop=[None, None], y_start_stop=[None, None
 
     # Return the list of windows
     return window_list
+def compute_haralick(crop_img):
 
+    haralick_features = []
+    crop_img = np.array(crop_img)
+
+    windows = slide_window_helper(crop_img)
+    for window in windows:
+        roi = crop_img[window[1]:window[3], window[0]:window[2], :3]
+
+        haralick_feat = mahotas.features.haralick(roi).mean(0)
+        
+
+
+        haralick_features.append(haralick_feat[:5])
+
+    haralick_arr = np.array(haralick_features)
+
+    #print("This is the shape: ", np.shape(haralick_arr), "These are the features: ", haralick_arr)
+
+
+    dims = crop_img.shape
+    total = np.zeros((0, dims[1], 5))
+    for i in range(dims[0]// 32):
+        partial = np.zeros((32, 0, 5))
+        for j in range(dims[1]//32):
+            feat = np.ones((32, 32, 5))
+            feat = feat*haralick_features[dims[1]//32*i+j]
+            #print("Partial ", np.shape(partial), "feat ", np.shape(feat))
+            partial = np.concatenate((partial, feat), 1)
+        total = np.concatenate((total, partial), 0)
+
+    print(total.shape)
+
+    #plt.imshow(total[..., :3]/[total[..., 0].max(), total[..., 1].max(), total[..., 2].max()])
+    #plt.show()
+
+    return total
 
 def get_features(image, color_feat = True):
 
     traindata = []
-    colors = []
-    test = []
+    #traindata_dp = []
+    #colors = []
+    #dpimg = np.asarray(dpimg)
     image = np.asarray(image)
     windows = slide_window_helper(image)
 
@@ -83,22 +121,8 @@ def get_features(image, color_feat = True):
                 colors = tuple(image[i,j])
                 traindata.append(colors)
 
-   # if texture == True:
-    #    for i in range(0, image.shape[0]):
-     #       for j in range(0, image.shape[1]):
+    training_data = np.array(traindata)
 
-                    #for window in windows:
-                    #roi = image[window[1]:window[3], window[0]:window[2], :3]
-
-      #          haralick_features = mahotas.features.haralick(image[i, j]).mean(0)
-       
-                    #harafeat_list = [item for sublist in haralick_features for item in sublist]
-       #         print("The tasks at hand: ", window, j, i)
-        #        test.append(haralick_features)
-
-  
-    #test = np.asarray(test)
-    training_data = np.asarray(traindata)
 
     return training_data
 
@@ -106,7 +130,11 @@ def load_training(imgs):
     features = []
     for file in imgs:
         img = cv2.imread(file)
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) #YCR_CB #BGR #HSV
         training_feat = get_features(img)
+        hara = compute_haralick(img)
+        hara = hara.reshape((-1, 5))
+        training_feat = np.concatenate((training_feat, hara), 1)
         features.append(training_feat)
 
     return features
@@ -168,7 +196,7 @@ def main():
 
     print("own data start \n")
 
-    for j in range(25):
+    for j in range(850):
         zed.grab(runtime_parameters)
 
     
@@ -182,7 +210,9 @@ def main():
 
             feat_img = image.get_data()[:, : , :3]
 
-            feat_img = cv2.cvtColor(feat_img, cv2.COLOR_BGR2RGB)
+            #feat_img = cv2.cvtColor(feat_img, cv2.COLOR_BGR2RGB)
+
+            #feat_img = cv2.cvtColor(feat_img, cv2.COLOR_BGR2YCR_CB) #YCR_CB #RGB #HSV
 
             zed.retrieve_measure(point_cloud, sl.PyMEASURE.PyMEASURE_XYZRGBA)
 
@@ -190,18 +220,27 @@ def main():
 
             zed.retrieve_measure(confidence, sl.PyMEASURE.PyMEASURE_CONFIDENCE)
             
+            haralick = compute_haralick(feat_img)
+            haralick = haralick.reshape((-1, 5))
+            print(haralick.shape, feat_img.shape)
 
-            feature = get_features(feat_img, color_feat)
+            feat_col = feat_img[:704, :, :3]
+
+            feature = get_features(feat_col, color_feat)
+            print(feature.shape)
+            feature = np.concatenate((feature, haralick), 1)
 
             features.append(feature)
             
-
+    #print(np.array(features))
 
     data = np.array(features)[0, :, :]
+
+    print(data.shape)
     road_folder = ['C:/Users/marti/PowerShell/zed-python/tutorials/non-vehicles/semisupervised/Road']
     nonroad_folder = ['C:/Users/marti/PowerShell/zed-python/tutorials/non-vehicles/semisupervised/non-road']
     scaled_X, y = prepare_images_for_processing(road_folder, nonroad_folder, "png")
-    print(scaled_X, y)
+    #print(scaled_X, y)
     classifier = LinearSVC()
 
     #svm.SVC(C=0.2, cache_size=200, class_weight=None, coef0=0.0,
@@ -210,12 +249,12 @@ def main():
     #tol=0.001, verbose=False)
     classifier.fit(scaled_X, y)
     classes = classifier.predict(data)
-    classes = classes.reshape(720, 1280)
+    classes = classes.reshape(704, 1280)
 
-    blank_image = np.zeros((np.shape(feat_img)[0], np.shape(feat_img)[1],3), np.uint8)
+    blank_image = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
     
     classified = np.dstack((blank_image, classes))
-    print(np.shape(classified))
+    #print(np.shape(classified))
     for k in range(0, blank_image.shape[0]):
        for l in range(0, blank_image.shape[1]):
 
@@ -233,6 +272,9 @@ def main():
 
     plt.subplot(211)
     plt.imshow(closing)
+    red_patch = mpatches.Patch(color='red', label='road')
+    green_patch = mpatches.Patch(color='green', label='non-road')
+    plt.legend(handles=[red_patch, green_patch])
     plt.subplot(212)
     plt.imshow(feat_img)
     plt.title('Original Image')
@@ -242,5 +284,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
