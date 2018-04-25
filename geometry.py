@@ -21,3 +21,9 @@ def display_depth(mat, scaling):
 	plt.imshow(mat[..., (0, 1, 4)]/[256 ,256, scaling])
 	plt.show()
 
+def is_road(img, rot_=(0.3, 0, 0), thresh = 1700):
+	rot_mat = rot(rot_[0], rot_[1], rot_[2]) 
+	rot_img = np.nan_to_num(img).dot(rot_mat)
+	road = (rot_img[..., 4] < thresh)*1
+	return road
+	
