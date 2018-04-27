@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import glob
 import time
 from skimage.feature import hog
+from sklearn.externals import joblib
 from sklearn.svm import LinearSVC
 from sklearn import svm
 from sklearn.preprocessing import StandardScaler
@@ -21,8 +22,9 @@ import pathlib
 import HOG_lib
 import mahotas
 import matplotlib.patches as mpatches
+import geometry as g
 
-def slide_window_helper(img, x_start_stop=[None, None], y_start_stop=[None, None], window_size=[32, 32]):
+def slide_window_helper_old(img, x_start_stop=[None, None], y_start_stop=[None, None], window_size=[32, 32]):
     window_size_x = window_size[0]
     window_size_y = window_size[1]
     xy_overlap=(0, 0)
@@ -68,15 +70,34 @@ def slide_window_helper(img, x_start_stop=[None, None], y_start_stop=[None, None
 
     # Return the list of windows
     return window_list
+
+
+def slide_window_helper(img, x_start_stop=[None, None], y_start_stop=[None, None], window_size=[32, 32]):
+    window_size_x = window_size[0]
+    window_size_y = window_size[1]
+    x_windows = img.shape[0]// window_size_x
+    y_windows = img.shape[1]// window_size_y
+
+    window_list = []
+    for j in range(x_windows):
+        for i in range(y_windows):
+            window = [i*window_size_x, j*window_size_y, (i+1)*window_size_x, (j+1)*window_size_y]
+            window_list.append(window)
+
+    return window_list
+
+
+
 def compute_haralick(crop_img):
 
     haralick_features = []
     crop_img = np.array(crop_img)
-
+    print(crop_img.shape)
     windows = slide_window_helper(crop_img)
+    print(windows)
     for window in windows:
         roi = crop_img[window[1]:window[3], window[0]:window[2], :3]
-
+        print (window)
         haralick_feat = mahotas.features.haralick(roi).mean(0)
         
 
@@ -89,6 +110,7 @@ def compute_haralick(crop_img):
 
 
     dims = crop_img.shape
+    
     total = np.zeros((0, dims[1], 5))
     for i in range(dims[0]// 32):
         partial = np.zeros((32, 0, 5))
@@ -99,7 +121,7 @@ def compute_haralick(crop_img):
             partial = np.concatenate((partial, feat), 1)
         total = np.concatenate((total, partial), 0)
 
-    print(total.shape)
+    #print(total.shape)
 
     #plt.imshow(total[..., :3]/[total[..., 0].max(), total[..., 1].max(), total[..., 2].max()])
     #plt.show()
@@ -164,6 +186,48 @@ def prepare_images_for_processing(road_folder, nonroad_folder, image_type):
     return X, y
 
 
+def generate_classifier():
+    road_folder = ['C:/Users/marti/PowerShell/zed-python/tutorials/non-vehicles/semisupervised/Road']
+    nonroad_folder = ['C:/Users/marti/PowerShell/zed-python/tutorials/non-vehicles/semisupervised/non-road']
+    scaled_X, y = prepare_images_for_processing(road_folder, nonroad_folder, "png")
+    #print(scaled_X, y)
+    classifier = LinearSVC()
+    return classifier, scaled_X, y
+
+
+def show(classes, feat_col, feat_img):
+    blank_image = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
+    
+    classified = np.dstack((blank_image, classes))
+    #print(np.shape(classified))
+    for k in range(0, blank_image.shape[0]):
+       for l in range(0, blank_image.shape[1]):
+
+            if classified[k,l,3] == 1:
+                blank_image[k, l] = (255, 255, 255)
+                #print("i did this", k, l)
+
+            elif classified[k,l,3] == 0:
+                blank_image[k, l] = (0, 0, 0)
+                #print("i did thissss")
+    feat_img = cv2.cvtColor(feat_img, cv2.COLOR_BGR2RGB)
+    kernel = np.ones((9,9),np.uint8)
+    median = cv2.medianBlur(blank_image, 15)
+    opening = cv2.morphologyEx(median, cv2.MORPH_OPEN, kernel)        
+    closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+
+    plt.subplot(211)
+    plt.imshow(closing)
+    red_patch = mpatches.Patch(color='white', label='road')
+    green_patch = mpatches.Patch(color='black', label='non-road')
+    plt.legend(handles=[red_patch, green_patch])
+    plt.subplot(212)
+    plt.imshow(feat_img)
+    plt.title('Original Image')
+    plt.show()
+
+
+
 def main():
 
     zed = zcam.PyZEDCamera()
@@ -193,10 +257,13 @@ def main():
     #np.zeros((0, 8460))
     features = []
     images = []
+    depthroad = []
+
+    classifier, scaled_X, y = generate_classifier()
 
     print("own data start \n")
 
-    for j in range(850):
+    for j in range(2500):
         zed.grab(runtime_parameters)
 
     
@@ -220,65 +287,47 @@ def main():
 
             zed.retrieve_measure(confidence, sl.PyMEASURE.PyMEASURE_CONFIDENCE)
             
-            haralick = compute_haralick(feat_img)
+            feat_col = feat_img[:704, :, :3]
+            
+
+            haralick = compute_haralick(feat_col)
             haralick = haralick.reshape((-1, 5))
             print(haralick.shape, feat_img.shape)
 
-            feat_col = feat_img[:704, :, :3]
+
+
 
             feature = get_features(feat_col, color_feat)
             print(feature.shape)
             feature = np.concatenate((feature, haralick), 1)
 
+            depthroad = 1- g.is_road(point_cloud.get_data()[:704, :, :3])
+            plt.imshow (depthroad)
+            plt.show()
+
             features.append(feature)
-            
-    #print(np.array(features))
+                    
+            #print(np.array(features))
 
-    data = np.array(features)[0, :, :]
+            data = np.array(features)[0, :, :]
 
-    print(data.shape)
-    road_folder = ['C:/Users/marti/PowerShell/zed-python/tutorials/non-vehicles/semisupervised/Road']
-    nonroad_folder = ['C:/Users/marti/PowerShell/zed-python/tutorials/non-vehicles/semisupervised/non-road']
-    scaled_X, y = prepare_images_for_processing(road_folder, nonroad_folder, "png")
-    #print(scaled_X, y)
-    classifier = LinearSVC()
+            print(data.shape)
 
-    #svm.SVC(C=0.2, cache_size=200, class_weight=None, coef0=0.0,
-    #decision_function_shape='ovr', degree=3, gamma='auto', kernel='rbf',
-    #max_iter=-1, probability=False, random_state=None, shrinking=True,
-    #tol=0.001, verbose=False)
-    classifier.fit(scaled_X, y)
-    classes = classifier.predict(data)
-    classes = classes.reshape(704, 1280)
 
-    blank_image = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
-    
-    classified = np.dstack((blank_image, classes))
-    #print(np.shape(classified))
-    for k in range(0, blank_image.shape[0]):
-       for l in range(0, blank_image.shape[1]):
+            #svm.SVC(C=0.2, cache_size=200, class_weight=None, coef0=0.0,
+            #decision_function_shape='ovr', degree=3, gamma='auto', kernel='rbf',
+            #max_iter=-1, probability=False, random_state=None, shrinking=True,
+            #tol=0.001, verbose=False)
+            classification = classifier.fit(scaled_X, y)
 
-            if classified[k,l,3] == 1:
-                blank_image[k, l] = (255, 0, 0)
-                #print("i did this", k, l)
+            joblib.dump(classification, "Road_classifier.pkl", compress=3)
 
-            elif classified[k,l,3] == 0:
-                blank_image[k, l] = (0, 255, 0)
-                #print("i did thissss")
+            classes = classifier.predict(data)
+            classes = classes.reshape(704, 1280)
 
-    kernel = np.ones((5,5),np.uint8)
-    opening = cv2.morphologyEx(blank_image, cv2.MORPH_OPEN, kernel)        
-    closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+            classes = np.logical_and(classes, depthroad)
 
-    plt.subplot(211)
-    plt.imshow(closing)
-    red_patch = mpatches.Patch(color='red', label='road')
-    green_patch = mpatches.Patch(color='green', label='non-road')
-    plt.legend(handles=[red_patch, green_patch])
-    plt.subplot(212)
-    plt.imshow(feat_img)
-    plt.title('Original Image')
-    plt.show()
+            show(classes, feat_col, feat_img)
 
 
 
