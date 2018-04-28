@@ -112,15 +112,55 @@ def show(classes, feat_col, feat_img):
     opening = cv2.morphologyEx(median, cv2.MORPH_OPEN, kernel)        
     closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
 
-    plt.subplot(211)
+    closing = cv2.cvtColor(closing, cv2.COLOR_BGR2GRAY)
+
+    ret, closing = cv2.threshold(closing, 1, 255, cv2.THRESH_BINARY)
+
+
+    im2, contours, hierarchy = cv2.findContours(closing, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+    if len(contours) != 0:
+        
+        cont_img = np.array(feat_col)
+
+        cv2.drawContours(cont_img, contours, -1, (255,0,0), 3)
+
+        c = max(contours, key = cv2.contourArea)
+
+        x,y,w,h = cv2.boundingRect(c)
+    
+        cv2.rectangle(cont_img,(x,y),(x+w,y+h),(0,255,0),2)
+
+        print(x, y, w, h)
+
+        cropped = cont_img[y:y+h, x:x+w]
+        cropped1 = closing[y:y+h, x:x+w]
+
+
+    #Perspective transform
+    #Perspective matricies both regular and inverse
+    
+    Pts =  np.float32([[0, 0], [0, h], [w-73, h], [w, 0]])
+    Pts_inv = np.float32([[0, 0], [w-(w/1.2), h], [w-(w/2.5), h], [w, 0]]) #np.float32([[500, dims[0]], [700, dims[0]], [0, 0], [dims[1], 0]]) (w/1.5) (w/3)
+
+    M =cv2.getPerspectiveTransform(Pts, Pts_inv)
+    Minv = cv2.getPerspectiveTransform(Pts, Pts_inv)
+
+    warped_img = cv2.warpPerspective(cropped1, M, (w, h))
+
+
+    plt.subplot(131)
     plt.imshow(closing)
     red_patch = mpatches.Patch(color='white', label='road')
     green_patch = mpatches.Patch(color='black', label='non-road')
     plt.legend(handles=[red_patch, green_patch])
     plt.title('Road Extraction')
-    plt.subplot(212)
+    plt.subplot(132)
     plt.imshow(feat_img)
     plt.title('Original Image')
+    plt.subplot(133)
+    plt.imshow(warped_img)
+    plt.title('Perspective Transformation')
     plt.show()
 
 
@@ -159,7 +199,7 @@ def main():
 
     print("own data start \n")
 
-    for j in range(3200):
+    for j in range(22):
         zed.grab(runtime_parameters)
 
     
