@@ -107,23 +107,23 @@ def show(classes, feat_col, feat_img):
                 blank_image[k, l] = (0, 0, 0)
 
     feat_img = cv2.cvtColor(feat_img, cv2.COLOR_BGR2RGB)
-    kernel = np.ones((9,9),np.uint8)
-    median = cv2.medianBlur(blank_image, 15)
+    kernel = np.ones((9,9),np.uint8) #(15,15)
+    median = cv2.medianBlur(blank_image, 15)#(31, 31)
     opening = cv2.morphologyEx(median, cv2.MORPH_OPEN, kernel)        
-    closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+    closing1 = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
 
-    closing = cv2.cvtColor(closing, cv2.COLOR_BGR2GRAY)
+    closing = cv2.cvtColor(closing1, cv2.COLOR_BGR2GRAY)
 
     ret, closing = cv2.threshold(closing, 1, 255, cv2.THRESH_BINARY)
 
 
-    im2, contours, hierarchy = cv2.findContours(closing, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    im2, contours, hierarchy = cv2.findContours(closing, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     if len(contours) != 0:
         
         cont_img = np.array(feat_col)
 
-        cv2.drawContours(cont_img, contours, -1, (255,0,0), 3)
+        cv2.drawContours(cont_img, contours, -1, (0,0,255), 3, 6)
 
         c = max(contours, key = cv2.contourArea)
 
@@ -140,23 +140,25 @@ def show(classes, feat_col, feat_img):
     #Perspective transform
     #Perspective matricies both regular and inverse
     
-    Pts =  np.float32([[0, 0], [0, h], [w-73, h], [w, 0]])
-    Pts_inv = np.float32([[0, 0], [w-(w/1.2), h], [w-(w/2.5), h], [w, 0]]) #np.float32([[500, dims[0]], [700, dims[0]], [0, 0], [dims[1], 0]]) (w/1.5) (w/3)
+    Pts =  np.float32([[0, 0], [0, h], [w, h], [w, 0]])
+    Pts_inv = np.float32([[0, 0], [w-(w/1.5), h], [w-(w/2), h], [w, 0]]) #np.float32([[500, dims[0]], [700, dims[0]], [0, 0], [dims[1], 0]]) (w/1.5) (w/3)
 
     M =cv2.getPerspectiveTransform(Pts, Pts_inv)
     Minv = cv2.getPerspectiveTransform(Pts, Pts_inv)
+    print(contours[0])
+    print(np.array(contours).shape)
 
     warped_img = cv2.warpPerspective(cropped1, M, (w, h))
 
 
     plt.subplot(131)
-    plt.imshow(closing)
+    plt.imshow(closing1)
     red_patch = mpatches.Patch(color='white', label='road')
     green_patch = mpatches.Patch(color='black', label='non-road')
     plt.legend(handles=[red_patch, green_patch])
     plt.title('Road Extraction')
     plt.subplot(132)
-    plt.imshow(feat_img)
+    plt.imshow(cont_img)
     plt.title('Original Image')
     plt.subplot(133)
     plt.imshow(warped_img)
@@ -199,7 +201,7 @@ def main():
 
     print("own data start \n")
 
-    for j in range(22):
+    for j in range(2100):
         zed.grab(runtime_parameters)
 
     
