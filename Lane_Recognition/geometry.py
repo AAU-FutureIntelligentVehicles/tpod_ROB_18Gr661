@@ -27,3 +27,11 @@ def is_road(img, rot_=(0.3, 0, 0), thresh = 1700):
 	road = (rot_img[..., 1] < thresh)*1
 	return road
 	
+	
+def pcl_lookup (contour, point_cloud, rot_ =(0.3, 0, 0)):
+	rot_mat = rot(rot_[0], rot_[1], rot_[2]) 
+	rot_pc= np.nan_to_num(point_cloud).dot(rot_mat)
+	new_contours = []
+	for point in contour:
+		new_contours.append([[rot_pc[point[0,0],point[0,1], 0], rot_pc[point[0,0],point[0,1], 2]]]) 
+	return new_contours
