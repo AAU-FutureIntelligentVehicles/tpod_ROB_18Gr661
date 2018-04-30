@@ -38,5 +38,5 @@ def pcl_lookup (contour, point_cloud, rot_ =(0.3, 0, 0)):
 	rot_pc= np.nan_to_num(point_cloud).dot(rot_mat)
 	new_contours = []
 	for point in contour:
-		new_contours.append([[int(rot_pc[point[0,0],point[0,1], 0]), int(rot_pc[point[0,0],point[0,1], 2)]]]) 
+		new_contours.append([[int(rot_pc[point[0,0],point[0,1], 0]+20000), int(rot_pc[point[0,0],point[0,1], 2)]]]) #20000 is the maximum negative value of the point cloud
 	return new_contours
