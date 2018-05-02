@@ -24,9 +24,10 @@ import mahotas
 import matplotlib.patches as mpatches
 import geometry as g
 
+windowSize = 64
 
 
-def slide_window_helper(img, x_start_stop=[None, None], y_start_stop=[None, None], window_size=[32, 32]):
+def slide_window_helper(img, x_start_stop=[None, None], y_start_stop=[None, None], window_size=[64, 64]):
     window_size_x = window_size[0]
     window_size_y = window_size[1]
     x_windows = img.shape[0]// window_size_x
@@ -61,11 +62,11 @@ def compute_haralick(crop_img):
     total = np.zeros((0, dims[1], 5))
 
     #Create a matrix with the haralick features, which can be stacked with the other features.
-    for i in range(dims[0]// 32):
-        partial = np.zeros((32, 0, 5))
-        for j in range(dims[1]//32):
-            feat = np.ones((32, 32, 5))
-            feat = feat*haralick_features[dims[1]//32*i+j]
+    for i in range(dims[0]// windowSize):
+        partial = np.zeros((windowSize, 0, 5))
+        for j in range(dims[1]//windowSize):
+            feat = np.ones((windowSize, windowSize, 5))
+            feat = feat*haralick_features[dims[1]//windowSize*i+j]
             partial = np.concatenate((partial, feat), 1)
         total = np.concatenate((total, partial), 0)
 
@@ -91,7 +92,7 @@ def get_features(image, color_feat = True):
 
 
 
-def show(classes, feat_col, feat_img):
+def show(classes, feat_col, feat_img, point_cloud):
     blank_image = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
     
     classified = np.dstack((blank_image, classes))
@@ -119,14 +120,20 @@ def show(classes, feat_col, feat_img):
 
     im2, contours, hierarchy = cv2.findContours(closing, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+
     if len(contours) != 0:
         
         cont_img = np.array(feat_col)
 
-        cv2.drawContours(cont_img, contours, -1, (0,0,255), 3, 6)
 
         c = max(contours, key = cv2.contourArea)
 
+        blank_img = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
+
+        cv2.drawContours(cont_img, c, -1, (0,0,255), -1)
+
+
+        print(c[0][0][1], c.shape, type(c))
         x,y,w,h = cv2.boundingRect(c)
     
         cv2.rectangle(cont_img,(x,y),(x+w,y+h),(0,255,0),2)
@@ -145,24 +152,36 @@ def show(classes, feat_col, feat_img):
 
     M =cv2.getPerspectiveTransform(Pts, Pts_inv)
     Minv = cv2.getPerspectiveTransform(Pts, Pts_inv)
-    print(contours[0])
-    print(np.array(contours).shape)
-
     warped_img = cv2.warpPerspective(cropped1, M, (w, h))
 
+    point_cloud = np.asarray(point_cloud)
 
-    plt.subplot(131)
+
+    cont = g.pcl_lookup(c, point_cloud)
+    print (c.dtype)
+    cont = np.int32(cont)
+    print (cont)
+    road_geometry = np.zeros((400, 800, 3))
+    cv2.drawContours(road_geometry, [cont], -1, (255,255,255), -1)
+
+
+    print(cont, c)
+
+    plt.subplot(231)
     plt.imshow(closing1)
     red_patch = mpatches.Patch(color='white', label='road')
     green_patch = mpatches.Patch(color='black', label='non-road')
     plt.legend(handles=[red_patch, green_patch])
     plt.title('Road Extraction')
-    plt.subplot(132)
+    plt.subplot(232)
     plt.imshow(cont_img)
     plt.title('Original Image')
-    plt.subplot(133)
+    plt.subplot(233)
     plt.imshow(warped_img)
     plt.title('Perspective Transformation')
+    plt.subplot(234)
+    plt.imshow(road_geometry)
+    plt.title('Point Cloud geometry')
     plt.show()
 
 
@@ -241,7 +260,8 @@ def main():
             classes = classes.reshape(704, 1280)
             classes = np.logical_and(classes, depthroad)
 
-            show(classes, feat_col, feat_img)
+
+            show(classes, feat_col, feat_img, point_cloud.get_data()[:704, :, :3])
 
 
 
