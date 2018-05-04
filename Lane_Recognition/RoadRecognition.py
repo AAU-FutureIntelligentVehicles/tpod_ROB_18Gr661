@@ -7,22 +7,16 @@ import numpy as np
 import sys
 import matplotlib.image as mpimg
 import cv2
-import random
 import matplotlib.pyplot as plt
 import glob
-import time
-from skimage.feature import hog
 from sklearn.externals import joblib
 from sklearn.svm import LinearSVC
-from sklearn import svm
 from sklearn.preprocessing import StandardScaler
-from sklearn.cross_validation import train_test_split
-import hdbscan
 import pathlib
-import HOG_lib
 import mahotas
 import matplotlib.patches as mpatches
 import geometry as g
+
 
 windowSize = 64
 
