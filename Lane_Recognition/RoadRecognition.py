@@ -127,7 +127,7 @@ def show(classes, feat_col, feat_img, point_cloud):
 
         blank_img = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
 
-        cv2.drawContours(cont_img, c, -1, (0,0,255), -1)
+        cv2.drawContours(cont_img, [c], -1, (0,0,255), 10)
 
 
         print(c[0][0][1], c.shape, type(c))
