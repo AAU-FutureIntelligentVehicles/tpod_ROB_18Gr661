@@ -90,29 +90,29 @@ def get_features(image, color_feat = True):
 
 
 def show(classes, feat_col, feat_img, point_cloud):
-    blank_image = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
+    #blank_image = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
     
-    classified = np.dstack((blank_image, classes))
-
-    for k in range(0, blank_image.shape[0]):
-       for l in range(0, blank_image.shape[1]):
-
-            if classified[k,l,3] == 1:
-                blank_image[k, l] = (255, 255, 255)
-
-
-            elif classified[k,l,3] == 0:
-                blank_image[k, l] = (0, 0, 0)
+    #classified = np.dstack((blank_image, classes))
+    #
+    #for k in range(0, blank_image.shape[0]):
+    #   for l in range(0, blank_image.shape[1]):
+    #
+    #        if classified[k,l,3] == 1:
+    #            blank_image[k, l] = (255, 255, 255)
+    #
+    #        elif classified[k,l,3] == 0:
+    #            blank_image[k, l] = (0, 0, 0)
 
     feat_img = cv2.cvtColor(feat_img, cv2.COLOR_BGR2RGB)
     kernel = np.ones((9,9),np.uint8) #(15,15)
-    median = cv2.medianBlur(blank_image, 15)#(31, 31)
+    classes = classes.astype(np.uint8)
+    median = cv2.medianBlur(classes, 15)#(31, 31)
     opening = cv2.morphologyEx(median, cv2.MORPH_OPEN, kernel)        
-    closing1 = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+    closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
 
-    closing = cv2.cvtColor(closing1, cv2.COLOR_BGR2GRAY)
+    #closing = cv2.cvtColor(closing1, cv2.COLOR_BGR2GRAY)
 
-    ret, closing = cv2.threshold(closing, 1, 255, cv2.THRESH_BINARY)
+    #ret, closing = cv2.threshold(closing, 1, 255, cv2.THRESH_BINARY)
 
 
     im2, contours, hierarchy = cv2.findContours(closing, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -159,14 +159,14 @@ def show(classes, feat_col, feat_img, point_cloud):
     cont = np.int32(cont)
     road_geometry = np.zeros((400, 800, 3))
     print(cont[0][0])
-    cv2.line(cont_img, cont[50][0], cont[500][0], (255, 0, 0))
+    #cv2.line(cont_img, cont[50][0], cont[500][0], (255, 0, 0))
     cv2.drawContours(road_geometry, [cont], -1, (255,255,255), -1)
 
 
     print(cont, c)
 
     plt.subplot(231)
-    plt.imshow(closing1)
+    plt.imshow(closing)
     red_patch = mpatches.Patch(color='white', label='road')
     green_patch = mpatches.Patch(color='black', label='non-road')
     plt.legend(handles=[red_patch, green_patch])
@@ -218,7 +218,7 @@ def main():
 
     print("own data start \n")
 
-    for j in range(2100):
+    for j in range(21):
         zed.grab(runtime_parameters)
 
     
