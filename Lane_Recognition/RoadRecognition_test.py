@@ -23,7 +23,7 @@ import HOG_lib
 import mahotas
 import matplotlib.patches as mpatches
 import geometry as g
-
+import multiprocessing as mp
 
 
 def slide_window_helper(img, x_start_stop=[None, None], y_start_stop=[None, None], window_size=[32, 32]):
@@ -40,7 +40,8 @@ def slide_window_helper(img, x_start_stop=[None, None], y_start_stop=[None, None
 
     return window_list
 
-
+def _ch(roi): #compute harelick mapped function
+    return mahotas.features.haralick(roi).mean(0)[:5]
 
 def compute_haralick(crop_img):
 
@@ -49,17 +50,22 @@ def compute_haralick(crop_img):
     windows = slide_window_helper(crop_img)
     t = time.process_time()
     t2 = t
+    rois = []
+    pool = mp.Pool(mp.cpu_count())
     #Extract features from the localized areas of the image. These 32x32 blocks can be resized in slide_window_helper().
     for window in windows:
-        t2 = time.process_time()
+        #t2 = time.process_time()
         #print ("window time        {0}".format(t2 - t))
-        t = t2
+        #t = t2
         roi = crop_img[window[1]:window[3], window[0]:window[2], :3]
+        rois.append(roi)
+        #haralick_feat = mahotas.features.haralick(roi).mean(0)
         
-        haralick_feat = mahotas.features.haralick(roi).mean(0)
+        #haralick_features.append(haralick_feat[:5])
         
-        haralick_features.append(haralick_feat[:5])
-
+    haralick_features = pool.map(_ch, rois, 10)
+    pool.close()
+    pool.join()
     haralick_arr = np.array(haralick_features)
     dims = crop_img.shape
     total = np.zeros((0, dims[1], 5))
