@@ -158,7 +158,7 @@ def show(classes, feat_col, feat_img, point_cloud):
     print (c.dtype)
     cont = np.int32(cont)
     road_geometry = np.zeros((400, 800, 3))
-    print(cont[0][0])
+    #print(cont[0][0])
     #cv2.line(cont_img, cont[50][0], cont[500][0], (255, 0, 0))
     cv2.drawContours(road_geometry, [cont], -1, (255,255,255), -1)
 
