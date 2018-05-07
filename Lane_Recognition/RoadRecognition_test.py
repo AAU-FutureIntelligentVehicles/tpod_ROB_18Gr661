@@ -49,9 +49,10 @@ def compute_haralick(crop_img):
     crop_img = np.array(crop_img)
     windows = slide_window_helper(crop_img)
     t = time.process_time()
-    t2 = t
+
     rois = []
     pool = mp.Pool(mp.cpu_count())
+    print ("        start pools:  {}".format(time.process_time()-t))
     #Extract features from the localized areas of the image. These 32x32 blocks can be resized in slide_window_helper().
     for window in windows:
         #t2 = time.process_time()
@@ -62,24 +63,30 @@ def compute_haralick(crop_img):
         #haralick_feat = mahotas.features.haralick(roi).mean(0)
         
         #haralick_features.append(haralick_feat[:5])
-        
+    print ("        create windows:  {}".format(time.process_time()-t))
+
     haralick_features = pool.map(_ch, rois, 10)
     pool.close()
     pool.join()
     haralick_arr = np.array(haralick_features)
     dims = crop_img.shape
     total = np.zeros((0, dims[1], 5))
+    print ("        extract haralick:  {}".format(time.process_time()-t))
 
     #Create a matrix with the haralick features, which can be stacked with the other features.
-    for i in range(dims[0]// 32):
-        partial = np.zeros((32, 0, 5))
-        for j in range(dims[1]//32):
-            feat = np.ones((32, 32, 5))
-            feat = feat*haralick_features[dims[1]//32*i+j]
-            partial = np.concatenate((partial, feat), 1)
-        total = np.concatenate((total, partial), 0)
+    window_count = dims[0]//32
+    array = haralick_arr.reshape((window_count, -1, 5)).repeat(32, axis = 0).repeat(32, axis = 1)
+    print(array.shape)
+    #for i in range(dims[0]// 32):
+    #    partial = np.zeros((32, 0, 5))
+    #    for j in range(dims[1]//32):
+    #        feat = np.ones((32, 32, 5))
+    #        feat = feat*haralick_features[dims[1]//32*i+j]
+    #        partial = np.concatenate((partial, feat), 1)
+    #    total = np.concatenate((total, partial), 0)
+    print ("        reconstruct image:  {}".format(time.process_time()-t))
 
-    return total
+    return array #total
 
 def get_features(image, color_feat = True):
 

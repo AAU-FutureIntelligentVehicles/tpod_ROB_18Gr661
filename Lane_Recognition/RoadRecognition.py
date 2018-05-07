@@ -56,18 +56,22 @@ def compute_haralick(crop_img):
     pool.join()
     haralick_arr = np.array(haralick_features)
     dims = crop_img.shape
-    total = np.zeros((0, dims[1], 5))
+    #total = np.zeros((0, dims[1], 5))
 
+
+
+    window_count = dims[0]//windowSize
+    array = haralick_arr.reshape((window_count, -1, 5)).repeat(windowSize, axis = 0).repeat(windowSize, axis = 1)
     #Create a matrix with the haralick features, which can be stacked with the other features.
-    for i in range(dims[0]// windowSize):
-        partial = np.zeros((windowSize, 0, 5))
-        for j in range(dims[1]//windowSize):
-            feat = np.ones((windowSize, windowSize, 5))
-            feat = feat*haralick_features[dims[1]//windowSize*i+j]
-            partial = np.concatenate((partial, feat), 1)
-        total = np.concatenate((total, partial), 0)
+    #for i in range(dims[0]// windowSize):
+    #    partial = np.zeros((windowSize, 0, 5))
+    #    for j in range(dims[1]//windowSize):
+    #        feat = np.ones((windowSize, windowSize, 5))
+    #        feat = feat*haralick_features[dims[1]//windowSize*i+j]
+    #        partial = np.concatenate((partial, feat), 1)
+    #    total = np.concatenate((total, partial), 0)
 
-    return total
+    return array
 
 def get_features(image, color_feat = True):
 
@@ -222,7 +226,7 @@ def main():
         zed.grab(runtime_parameters)
 
     
-    while i < 1:
+    while i < 10:
 
         i = i + 1
         # A new image is available if grab() returns PySUCCESS
