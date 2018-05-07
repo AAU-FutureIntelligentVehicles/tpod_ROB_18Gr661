@@ -77,6 +77,7 @@ def get_features(image, color_feat = True):
 
     traindata = []
     image = np.asarray(image)
+    return image.reshape((-1, image.shape[2]))
     windows = slide_window_helper(image)
 
     if color_feat == True:

@@ -92,6 +92,7 @@ def get_features(image, color_feat = True):
 
     traindata = []
     image = np.asarray(image)
+    return image.reshape ((-1, image.shape[2]))
     windows = slide_window_helper(image)
 
     if color_feat == True:
@@ -101,7 +102,6 @@ def get_features(image, color_feat = True):
                 traindata.append(colors)
 
     training_data = np.array(traindata)
-
 
     return training_data
 
@@ -247,14 +247,19 @@ def main():
 
 
             feat_col = feat_img[:704, :, :3]
-            
+            print("    image cropped: {0}".format(time.process_time()-looptime))
+
             haralick = compute_haralick(feat_col)
             haralick = haralick.reshape((-1, 5))
+            print("    harelick and features extracted: {0}".format(time.process_time()-looptime))
 
             feature = get_features(feat_col, color_feat)
+
+            print("    color features extracted: {0}".format(time.process_time()-looptime))
+
             feature = np.concatenate((feature, haralick), 1)
 
-            print("    harelick and features extracted: {0}".format(time.process_time()-looptime))
+            print("    features concatenated: {0}".format(time.process_time()-looptime))
 
             depthroad = 1- g.is_road(point_cloud.get_data()[:704, :, :3])
 
