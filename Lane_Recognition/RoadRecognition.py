@@ -263,7 +263,7 @@ def main():
             classes = np.logical_and(classes, depthroad)
 
 
-            show(classes, feat_col, feat_img, point_cloud.get_data()[:704, :, :3])
+            #show(classes, feat_col, feat_img, point_cloud.get_data()[:704, :, :3])
 
 
 
