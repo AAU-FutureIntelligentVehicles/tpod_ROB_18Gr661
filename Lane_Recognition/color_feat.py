@@ -24,6 +24,10 @@ import mahotas
 import matplotlib.patches as mpatches
 import geometry as g
 
+
+windowSize = 32
+
+
 def slide_window_helper_old(img, x_start_stop=[None, None], y_start_stop=[None, None], window_size=[32, 32]):
     window_size_x = window_size[0]
     window_size_y = window_size[1]
@@ -90,43 +94,32 @@ def slide_window_helper(img, x_start_stop=[None, None], y_start_stop=[None, None
 
 def compute_haralick(crop_img):
 
-    haralick_features = []
     crop_img = np.array(crop_img)
-    print(crop_img.shape)
     windows = slide_window_helper(crop_img)
-    print(windows)
+    rois = []
+
+    #Extract features from the localized areas of the image. These 32x32 blocks can be resized in slide_window_helper().
     for window in windows:
         roi = crop_img[window[1]:window[3], window[0]:window[2], :3]
-        print (window)
-        haralick_feat = mahotas.features.haralick(roi).mean(0)
+
+        roi = mahotas.features.haralick(roi).mean(0)[:5]
+        rois.append(roi)
+        #haralick_feat = mahotas.features.haralick(roi).mean(0)
         
-
-
-        haralick_features.append(haralick_feat[:5])
-
+        #haralick_features.append(haralick_feat[:5])
+    haralick_features = rois
     haralick_arr = np.array(haralick_features)
-
-    #print("This is the shape: ", np.shape(haralick_arr), "These are the features: ", haralick_arr)
-
-
     dims = crop_img.shape
-    
-    total = np.zeros((0, dims[1], 5))
-    for i in range(dims[0]// 32):
-        partial = np.zeros((32, 0, 5))
-        for j in range(dims[1]//32):
-            feat = np.ones((32, 32, 5))
-            feat = feat*haralick_features[dims[1]//32*i+j]
-            #print("Partial ", np.shape(partial), "feat ", np.shape(feat))
-            partial = np.concatenate((partial, feat), 1)
-        total = np.concatenate((total, partial), 0)
+    scaling_factor = [0.05423693486427112, 2258.078377174232,0.986424403324001,9114.763475900238,0.42569913950248545]
+    #haralick_arr = haralick_arr / scaling_factor
 
-    #print(total.shape)
 
-    #plt.imshow(total[..., :3]/[total[..., 0].max(), total[..., 1].max(), total[..., 2].max()])
-    #plt.show()
 
-    return total
+    window_count = dims[0]//windowSize
+    array = haralick_arr.reshape((window_count, -1, 5)).repeat(windowSize, axis = 0).repeat(windowSize, axis = 1)
+
+
+    return array
 
 def get_features(image, color_feat = True):
 
@@ -152,10 +145,11 @@ def load_training(imgs):
     features = []
     for file in imgs:
         img = cv2.imread(file)
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) #YCR_CB #BGR #HSV
+        #img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR) #YCR_CB #BGR #HSV
         training_feat = get_features(img)
         hara = compute_haralick(img)
         hara = hara.reshape((-1, 5))
+        print(hara.shape, training_feat.shape)
         training_feat = np.concatenate((training_feat, hara), 1)
         features.append(training_feat)
 
