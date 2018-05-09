@@ -56,20 +56,13 @@ def compute_haralick(crop_img):
     pool.join()
     haralick_arr = np.array(haralick_features)
     dims = crop_img.shape
-    #total = np.zeros((0, dims[1], 5))
+    scaling_factor = [0.05423693486427112, 2258.078377174232,0.986424403324001,9114.763475900238,0.42569913950248545]
+    #haralick_arr = haralick_arr / scaling_factor
 
 
 
     window_count = dims[0]//windowSize
     array = haralick_arr.reshape((window_count, -1, 5)).repeat(windowSize, axis = 0).repeat(windowSize, axis = 1)
-    #Create a matrix with the haralick features, which can be stacked with the other features.
-    #for i in range(dims[0]// windowSize):
-    #    partial = np.zeros((windowSize, 0, 5))
-    #    for j in range(dims[1]//windowSize):
-    #        feat = np.ones((windowSize, windowSize, 5))
-    #        feat = feat*haralick_features[dims[1]//windowSize*i+j]
-    #        partial = np.concatenate((partial, feat), 1)
-    #    total = np.concatenate((total, partial), 0)
 
     return array
 
@@ -95,7 +88,7 @@ def get_features(image, color_feat = True):
 
 
 def show(classes, feat_col, feat_img, point_cloud):
-    #blank_image = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
+    blank_image = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
     
     #classified = np.dstack((blank_image, classes))
     #
@@ -119,6 +112,12 @@ def show(classes, feat_col, feat_img, point_cloud):
 
     #ret, closing = cv2.threshold(closing, 1, 255, cv2.THRESH_BINARY)
 
+    #closing2 = closing[600:, :]
+    #print(closing2.shape)
+
+
+
+
 
     im2, contours, hierarchy = cv2.findContours(closing, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -126,7 +125,6 @@ def show(classes, feat_col, feat_img, point_cloud):
     if len(contours) != 0:
         
         cont_img = np.array(feat_col)
-
 
         c = max(contours, key = cv2.contourArea)
 
@@ -162,13 +160,36 @@ def show(classes, feat_col, feat_img, point_cloud):
     cont = g.pcl_lookup(c, point_cloud)
     print (c.dtype)
     cont = np.int32(cont)
-    road_geometry = np.zeros((400, 800, 3))
-    #print(cont[0][0])
-    #cv2.line(cont_img, cont[50][0], cont[500][0], (255, 0, 0))
+    road_geometry = np.zeros((400, 800, 3), dtype = 'uint8')
+
     cv2.drawContours(road_geometry, [cont], -1, (255,255,255), -1)
 
+    center_points = []
 
-    print(cont, c)
+    for i in range(10):
+        a = np.zeros((400, 800))
+        a[i*40:i*40+40, ...]=1
+        b=np.logical_and(road_geometry[..., 0], a).astype('uint8')
+        print(road_geometry[0:40,:,0], road_geometry[0:40,:,0].dtype)
+        road_cont = cv2.findContours(road_geometry[i*40:i*40+40,:,0].copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        M = cv2.moments(road_cont[0])
+        if M["m00"] > 1:
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            center_points.append((cX, cY + i*40))
+
+    for points in center_points:
+        cv2.circle(road_geometry, points, 7, (255, 0, 0), -1)
+
+    '''
+    im3, contours1, hierarchy = cv2.findContours(road_geometry, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    M = cv2.moments(contours1[0])
+    cX = int(M["m10"] / M["m00"])
+    cY = int(M["m01"] / M["m00"])
+    '''
+
+    #  cv2.circle(cont_img, (cX, cY+600), 7, (255, 0, 0), -1)
+
 
     plt.subplot(231)
     plt.imshow(closing)
@@ -183,7 +204,7 @@ def show(classes, feat_col, feat_img, point_cloud):
     plt.imshow(warped_img)
     plt.title('Perspective Transformation')
     plt.subplot(234)
-    plt.imshow(road_geometry)
+    plt.imshow(road_geometry,origin='lower')
     plt.title('Point Cloud geometry')
     plt.show()
 
@@ -223,11 +244,11 @@ def main():
 
     print("own data start \n")
 
-    for j in range(21):
+    for j in range(2600):
         zed.grab(runtime_parameters)
 
     
-    while i < 10:
+    while i < 1:
 
         i = i + 1
         # A new image is available if grab() returns PySUCCESS
@@ -264,7 +285,7 @@ def main():
             classes = np.logical_and(classes, depthroad)
 
 
-            #show(classes, feat_col, feat_img, point_cloud.get_data()[:704, :, :3])
+            show(classes, feat_col, feat_img, point_cloud.get_data()[:704, :, :3])
 
 
 
