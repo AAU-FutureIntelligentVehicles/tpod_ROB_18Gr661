@@ -11,12 +11,15 @@ import matplotlib.pyplot as plt
 import glob
 from sklearn.externals import joblib
 from sklearn.svm import LinearSVC
+from sklearn import svm
 from sklearn.preprocessing import StandardScaler
 import pathlib
 import mahotas
 import matplotlib.patches as mpatches
 import geometry as g
 import multiprocessing as mp
+from sklearn import datasets, linear_model
+
 
 windowSize = 64
 
@@ -170,7 +173,7 @@ def show(classes, feat_col, feat_img, point_cloud):
         a = np.zeros((400, 800))
         a[i*40:i*40+40, ...]=1
         b=np.logical_and(road_geometry[..., 0], a).astype('uint8')
-        print(road_geometry[0:40,:,0], road_geometry[0:40,:,0].dtype)
+        #print(road_geometry[0:40,:,0], road_geometry[0:40,:,0].dtype)
         road_cont = cv2.findContours(road_geometry[i*40:i*40+40,:,0].copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         M = cv2.moments(road_cont[0])
         if M["m00"] > 1:
@@ -180,6 +183,20 @@ def show(classes, feat_col, feat_img, point_cloud):
 
     for points in center_points:
         cv2.circle(road_geometry, points, 7, (255, 0, 0), -1)
+
+
+
+    svr_points = np.asarray(center_points)
+    polyapprox = np.polyfit(svr_points[:, 1], svr_points[:, 0], 2)
+
+
+    
+    approximation = np.asarray((svr_points[:,1]*svr_points[:,1]*polyapprox[0]+ svr_points[:,1]*polyapprox[1]+polyapprox[2], svr_points[:,1]), dtype='uint16').transpose()
+    print (approximation)
+    for points in zip(approximation[1:, :], approximation[:-1, :]):
+        print(points)
+        cv2.line(road_geometry, (points[0][0], points[0][1]), (points[1][0], points[1][1]), (0, 255, 0), 6)
+
 
     '''
     im3, contours1, hierarchy = cv2.findContours(road_geometry, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -205,7 +222,12 @@ def show(classes, feat_col, feat_img, point_cloud):
     plt.title('Perspective Transformation')
     plt.subplot(234)
     plt.imshow(road_geometry,origin='lower')
-    plt.title('Point Cloud geometry')
+    plt.title('Point Cloud Geometry')
+    plt.subplot(235)
+    plt.axis('equal')
+    plt.scatter(svr_points[:,0], svr_points[:, 1], color='darkorange', label='data')   
+    plt.plot( svr_points[:,1]*svr_points[:,1]*polyapprox[0]+ svr_points[:,1]*polyapprox[1]+polyapprox[2], svr_points[:,1], color='navy', lw=2, label='RBF model')
+    plt.title("Road Model")
     plt.show()
 
 
