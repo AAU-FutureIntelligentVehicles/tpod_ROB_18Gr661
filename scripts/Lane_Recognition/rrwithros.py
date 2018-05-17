@@ -37,7 +37,10 @@ def main():
             feat_col = feat_img[:704, :, :3]
             classes = rr.classify(feat_col, point_cloud, classifier)
 
-            rr.show(classes, feat_col, point_cloud.get_data()[:704, :, :3])
+
+            points = rr.compute_center(classes, feat_col, point_cloud.get_data()[:704, :, :3])
+            points = np.asarray(points)
+            print(points / 1000)
 
 
 
