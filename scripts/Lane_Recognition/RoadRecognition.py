@@ -165,7 +165,7 @@ def show(classes, feat_col, point_cloud):
 
 
         cont = g.pcl_lookup(c, point_cloud)
-        print (c.dtype)
+        #print (c.dtype)
         cont = np.int32(cont)
         road_geometry = np.zeros((400, 800, 3), dtype = 'uint8')
 
@@ -198,9 +198,9 @@ def show(classes, feat_col, point_cloud):
 
         
         approximation = np.asarray((svr_points[:,1]*svr_points[:,1]*polyapprox[0]+ svr_points[:,1]*polyapprox[1]+polyapprox[2], svr_points[:,1]), dtype='uint16').transpose()
-        print (approximation)
+        #print (approximation)
         for points in zip(approximation[1:, :], approximation[:-1, :]):
-            print(points)
+            #print(points)
             cv2.line(road_geometry, (points[0][0], points[0][1]), (points[1][0], points[1][1]), (0, 255, 0), 3)
 
 
