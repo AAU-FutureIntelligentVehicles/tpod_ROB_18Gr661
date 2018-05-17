@@ -93,6 +93,63 @@ def get_features(image, color_feat = True):
 
     return training_data
 
+def compute_center(classes, feat_col, point_cloud):
+
+
+    kernel = np.ones((9,9),np.uint8) #(15,15)
+    classes = classes.astype(np.uint8)
+    median = cv2.medianBlur(classes, 15)#(31, 31)
+    opening = cv2.morphologyEx(median, cv2.MORPH_OPEN, kernel)        
+    closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+    im2, contours, hierarchy = cv2.findContours(closing, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cont_img = np.array(feat_col)
+
+
+    if len(contours) != 0:
+        
+        
+
+        c = max(contours, key = cv2.contourArea)
+
+        blank_img = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
+
+        point_cloud = np.asarray(point_cloud)
+
+
+        cont = g.pcl_lookup(c, point_cloud)
+        #print (c.dtype)
+        cont = np.int32(cont)
+        road_geometry = np.zeros((400, 800, 3), dtype = 'uint8')
+
+        cv2.drawContours(road_geometry, [cont], -1, (255,255,255), -1)
+
+        scaling_factor = 50 #convert back to milimetres
+        centering_factor = 20000 #recenter the points
+        lower_limit_road = 1600
+        upper_limit_road = 2000
+
+        #for i in range(10):
+        a = np.zeros((400, 800))
+        a[lower_limit_road//scaling_factor:upper_limit_road//scaling_factor, ...]=1 #define the region we are looking for the center points of
+        b=np.logical_and(road_geometry[..., 0], a).astype('uint8') #mask the image to the region we are looking at
+        #print(road_geometry[0:40,:,0], road_geometry[0:40,:,0].dtype)
+        #cv2.rectangle(road_geometry,(0, 40*i),(800, 40),(0,255,0),1)
+
+        #find contours of the part of the image we want to find the handle in 
+        road_cont = cv2.findContours(road_geometry[1600//scaling_factor:2000//scaling_factor,:,0].copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        #compute the moments of the  contour
+        M = cv2.moments(road_cont[0])
+
+        #find the center point of the contour
+        if M["m00"] > 1:
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            center_point = [cX, cY]
+            center_point[0] = center_point [0]*scaling_factor  - centering_factor
+            center_point[1] = center_point [1]*scaling_factor  + lower_limit_road 
+            return center_point
+    return [0,0]
+
 
 
 
@@ -229,7 +286,7 @@ def show(classes, feat_col, point_cloud):
         plt.subplot(235)
         plt.axis('equal')
         plt.scatter(svr_points[:,0], svr_points[:, 1], color='darkorange', label='data')   
-        plt.plot( svr_points[:,1]*svr_points[:,1]*polyapprox[0]+ svr_points[:,1]*polyapprox[1]+polyapprox[2], svr_points[:,1], color='navy', lw=2, label='RBF model')
+        plt.plot(svr_points[:,1]*svr_points[:,1]*polyapprox[0]+ svr_points[:,1]*polyapprox[1]+polyapprox[2], svr_points[:,1], color='navy', lw=2, label='RBF model')
         plt.title("Road Model")
 
 
