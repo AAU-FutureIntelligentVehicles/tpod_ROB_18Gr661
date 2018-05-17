@@ -96,7 +96,7 @@ def get_features(image, color_feat = True):
 
 
 
-def show(classes, feat_col, feat_img, point_cloud):
+def show(classes, feat_col, point_cloud):
     blank_image = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
     
     classified = np.dstack((blank_image, classes))
@@ -311,9 +311,6 @@ def main():
     depth = core.PyMat()
     point_cloud = core.PyMat()
     confidence = core.PyMat()
-    features = []
-    images = []
-    depthroad = []
     classifier = joblib.load("Road_classifier.pkl")
 
 
@@ -322,7 +319,7 @@ def main():
     #for j in range(3032):
         #zed.grab(runtime_parameters)
 
-    
+
     zed.set_svo_position(3032)
 
     while i < 1:
@@ -332,18 +329,16 @@ def main():
         if zed.grab(runtime_parameters) == tp.PyERROR_CODE.PySUCCESS:
             # Retrieve left image
             zed.retrieve_image(image, sl.PyVIEW.PyVIEW_LEFT)
-
             zed.retrieve_measure(point_cloud, sl.PyMEASURE.PyMEASURE_XYZRGBA)
-
             zed.retrieve_measure(depth, sl.PyMEASURE.PyMEASURE_DEPTH)
 
-            print(point_cloud.get_data()[240, 140, :], point_cloud.get_data()[1:, 1:, :].shape)
+            #print(point_cloud.get_data()[240, 140, :], point_cloud.get_data()[1:, 1:, :].shape)
 
             feat_img = image.get_data()[:, : , :3]
             feat_col = feat_img[:704, :, :3]
             classes = classify(feat_col, point_cloud, classifier)
 
-            #show(classes, feat_col, feat_img, point_cloud.get_data()[:704, :, :3])
+            #show(classes, feat_col, point_cloud.get_data()[:704, :, :3])
 
 
 
