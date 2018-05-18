@@ -16,12 +16,12 @@ def main():
     classifier = joblib.load("Road_classifier.pkl")
 
 
-    print("own data start \n")
+    #print("own data start \n")
 
 
     zed.set_svo_position(3032)
 
-    while i < 1:
+    while i < 100:
 
         i = i + 1
         # A new image is available if grab() returns PySUCCESS
@@ -39,8 +39,8 @@ def main():
 
 
             points = rr.compute_center(classes, feat_col, point_cloud.get_data()[:704, :, :3])
-            points = np.asarray(points)
-            print(points / 1000)
+            points = np.asarray(points)/1000
+            print([points[0], points[1]])
 
 
 
