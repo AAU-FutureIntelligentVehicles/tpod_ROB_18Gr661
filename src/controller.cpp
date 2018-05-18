@@ -51,14 +51,13 @@ int main(int argc, char **argv){
 
 	//for publishing
 	std_msgs::Float64 turn_ticks;
-    std_msgs::Float64 brake_position;
+  std_msgs::Float64 brake_position;
 	accelerator_position.data = 0;
 
 
 	while(ros::ok()){
 
-		if (isAvoidance == 0){									//Loop for driving when no obstacle is in front of us
-
+		if (turningAngle != 1000){									//Loop for driving when no obstacle is in front of us
 			//convert the angle to ticks
 			float beta = turningAngle * K * 43408.5889;
 
@@ -85,7 +84,7 @@ int main(int argc, char **argv){
 			usleep(10000);														//Waits some time
 		}
 
-		else if (isAvoidance == 1){												//This is the loop for braking, when an obstacle is in front of us.
+		else if (turningAngle == 1000){												//This is the loop for braking, when an obstacle is in front of us.
 		brake_position.data = 0;												//we want to publish 0 to the brake = we start braking maximum
 		accelerator_position.data = 0;											//we want to send 0 to the accelerator = we stop applying speed
 

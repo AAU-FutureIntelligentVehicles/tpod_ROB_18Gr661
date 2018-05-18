@@ -31,8 +31,11 @@ class SubscriberAndPublisher{
     void Path_Point_Pub_CB(const geometry_msgs::Pose2D::ConstPtr& tpod_pose){
             if(path_points.empty()) {return;}
             if(path_points.x==0&&path_points.y==0) {
-                    std::cout<<"x =: "<<path_points.x<<"y ="<<path_points.y<<std::endl;
-                    return;}
+                      solution.theta = 1000;
+                      point_pub.publish(solution)
+                    }
+            //        std::cout<<"x =: "<<path_points.x<<"y ="<<path_points.y<<std::endl;
+            //        return;}
 
             for (auto itter = path_points){
                 //calculate angle between cart vector and aiming vector
