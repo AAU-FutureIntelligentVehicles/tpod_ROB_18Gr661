@@ -43,22 +43,23 @@ public:
         //        std::cout<<"x =: "<<path_points.x<<"y ="<<path_points.y<<std::endl;
         //        return;}
 
-        for (auto itter = path_points)
-        {
+        //for (auto itter = path_points)
+        //{
             //calculate angle between cart vector and aiming vector
             float car_vecx = 1;                 //cos(theta)= 1
             //  float car_vecy = sin(theta) ;     because theta=0 and cart direction doesn't matter this cancels out.
-            float p_vecx = cos(itter->x) ;
-            float p_vecy = sin(itter->y) ;
+            float p_vecx = cos(path_points.x) ;
+            float p_vecy = sin(path_points.y) ;
             float dotprod = car_vecx * p_vecx; //+ car_vecy * p_vecy;                           //Finding the dotproduct between the two vectors
             float norm_tpod = sqrt(car_vecx * car_vecx); //+ car_vecy * car_vecy);               //findin the length of the cart vector
             float norm_itter = sqrt(p_vecx * p_vecx + p_vecy * p_vecy);                         //findin the length of the Aiming vector
-            float alpha = acos(dotprod/(norm_tpod*norm_itter));                                 //formula for finding an angle between two vectors
+            float alpha = acos(dotprod/(norm_tpod*norm_itter));
+            alpha =  atan2(path_points.x,path_points.y)  ;                            //formula for finding an angle between two vectors
             // is the angle within our viweing angle
-            if(atan2(itter->x,itter->y) <= VIEWING_ANGLE/2) //alpha <= VIEWING_ANGLE/2){
+            if(atan2(path_points.x,path_points.y) <= VIEWING_ANGLE/2) //alpha <= VIEWING_ANGLE/2){
             {
                 // set the solution
-                solution = *itter;
+                solution = *path_points;
                 float determinant = car_vecx * p_vecy;// - car_vecy * p_vecx;                      //checking if the aiming vector is on the right hand side or left hand side. (should the cart turn right or left)
                 if (determinant < 0)
                 {
@@ -71,8 +72,8 @@ public:
             }
             return;
 
-            ++itter; // try the next point.
-        }
+        //    ++itter; // try the next point.
+        //}
     }
     // we only get here if we went through the whole path
     // if there is only one point left we keep publishing a last point 1 m away from the last point
