@@ -102,3 +102,12 @@ private:
     geometry_msgs::Pose2D last_point;
     geometry_msgs::Pose2D solution;
 };
+
+int main(int argc, char **argv){
+
+    //Ros stuff
+    ros::init(argc,argv,"path_points");
+    ros::NodeHandle nh;
+    SubscriberAndPublisher sap;
+    ros::spin();
+}
