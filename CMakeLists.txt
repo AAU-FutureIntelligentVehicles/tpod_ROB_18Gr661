@@ -133,8 +133,8 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
- add_executable(${PROJECT_NAME}_node src/Path_points.cpp)
- add_executable(${PROJECT_NAME}_node src/controller.cpp)
+# add_executable(${PROJECT_NAME}_node src/Path_points.cpp)
+# add_executable(${PROJECT_NAME}_node src/controller.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -147,9 +147,9 @@ include_directories(
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_node
-  ${catkin_LIBRARIES}
-)
+#target_link_libraries(${PROJECT_NAME}_node
+#  ${catkin_LIBRARIES}
+#)
 
 #############
 ## Install ##
@@ -199,10 +199,10 @@ target_link_libraries(${PROJECT_NAME}_node
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(Path_points src/Path_points.cpp)
-target_link_libraries(Path_points ${catkin_LIBRARIES})
+add_executable(Path_points_node src/Path_points.cpp)
+target_link_libraries(Path_points_node ${catkin_LIBRARIES})
 #add_dependencies(Path_points )
 
-add_executable(controller src/controller.cpp)
-target_link_libraries(controller ${catkin_LIBRARIES})
+add_executable(controller_node src/controller.cpp)
+target_link_libraries(controller_node ${catkin_LIBRARIES})
 #add_dependencies(controller ) 

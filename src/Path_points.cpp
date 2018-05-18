@@ -29,38 +29,36 @@ class SubscriberAndPublisher{
 
     //whenever a point is received, this function checks if a point on the path is within the search space, if it is it calculated theta_error and sends it to the controller.
     void Path_Point_Pub_CB(const geometry_msgs::Pose2D::ConstPtr& tpod_pose){
-            if(path_points.empty()) {return;}
-            if(path_points.x==0&&path_points.y==0) {
-                      solution.theta = 1000;
-                      point_pub.publish(solution)
-                    }
+    if(path_points.empty()) {return;}
+    if(path_points.x==0&&path_points.y==0) {
+            solution.theta = 1000;
+            point_pub.publish(solution)
+            }
             //        std::cout<<"x =: "<<path_points.x<<"y ="<<path_points.y<<std::endl;
             //        return;}
 
-            for (auto itter = path_points){
-                //calculate angle between cart vector and aiming vector
-                float car_vecx = 1;                 //cos(theta)= 1
-                //  float car_vecy = sin(theta) ;     because theta=0 and cart direction doesn't matter this cancels out.
-                float p_vecx = cos(itter->x) ;
-                float p_vecy = sin(itter->y) ;
+    for (auto itter = path_points){
+        //calculate angle between cart vector and aiming vector
+        float car_vecx = 1;                 //cos(theta)= 1
+        //  float car_vecy = sin(theta) ;     because theta=0 and cart direction doesn't matter this cancels out.
+        float p_vecx = cos(itter->x) ;
+        float p_vecy = sin(itter->y) ;
+        float dotprod = car_vecx * p_vecx; //+ car_vecy * p_vecy;                           //Finding the dotproduct between the two vectors
+        float norm_tpod = sqrt(car_vecx * car_vecx; //+ car_vecy * car_vecy);               //findin the length of the cart vector
+        float norm_itter = sqrt(p_vecx * p_vecx + p_vecy * p_vecy);                         //findin the length of the Aiming vector
 
-                float dotprod = car_vecx * p_vecx; //+ car_vecy * p_vecy;                           //Finding the dotproduct between the two vectors
-                float norm_tpod = sqrt(car_vecx * car_vecx; //+ car_vecy * car_vecy);               //findin the length of the cart vector
-                float norm_itter = sqrt(p_vecx * p_vecx + p_vecy * p_vecy);                         //findin the length of the Aiming vector
+        float alpha = acos(dotprod/(norm_tpod*norm_itter));                                 //formula for finding an angle between two vectors
 
-                float alpha = acos(dotprod/(norm_tpod*norm_itter));                                 //formula for finding an angle between two vectors
-
-                 // is the angle within our viweing angle
-                if(atan2(itter->x,itter->y) <= VIEWING_ANGLE/2){//alpha <= VIEWING_ANGLE/2){
-                    // set the solution
-                    solution = *itter;
-                    float determinant = car_vecx * p_vecy;// - car_vecy * p_vecx;                      //checking if the aiming vector is on the right hand side or left hand side. (should the cart turn right or left)
-                    if (determinant < 0){
-                        solution.theta = -alpha;
-                    }
-                    else solution.theta = alpha;
-
-                    point_pub.publish(solution);
+        // is the angle within our viweing angle
+        if(atan2(itter->x,itter->y) <= VIEWING_ANGLE/2){//alpha <= VIEWING_ANGLE/2){
+            // set the solution
+            solution = *itter;
+            float determinant = car_vecx * p_vecy;// - car_vecy * p_vecx;                      //checking if the aiming vector is on the right hand side or left hand side. (should the cart turn right or left)
+            if (determinant < 0){
+                solution.theta = -alpha;
+            }
+            else solution.theta = alpha;
+                point_pub.publish(solution);
 
                     }
                     return;
@@ -73,11 +71,11 @@ class SubscriberAndPublisher{
         // to ensure that the car drives all the way to the last path point.
 
 
-        else {
-            ROS_INFO("There doesnt seem to be any path points within the bounds"); // if anything fails
-            std::cout<<"\nThe next point is "<<path_points[1].x<<","<<path_points[1].y<<" | "<<path_points[1].theta<<std::endl;
-        }
-       return;
+        //else {
+        //    ROS_INFO("There doesnt seem to be any path points within the bounds"); // if anything fails
+        //    std::cout<<"\nThe next point is "<<path_points[1].x<<","<<path_points[1].y<<" | "<<path_points[1].theta<<std::endl;
+        //}
+        return;
     };
 
 
