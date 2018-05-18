@@ -13,7 +13,7 @@ def main():
     depth = rr.core.PyMat()
     point_cloud = rr.core.PyMat()
     confidence = rr.core.PyMat()
-    classifier = joblib.load("Road_classifier.pkl")
+    classifier = joblib.load("./Road_classifier.pkl")
 
 
     #print("own data start \n")
