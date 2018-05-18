@@ -100,7 +100,7 @@ ros::Subscriber location_point_sub;
 //publisher
 ros::Publisher point_pub;
 
-std::vector<geometry_msgs::Pose2D>  path_points;
+geometry_msgs::Pose2D path_points;
 geometry_msgs::Pose2D last_point;
 geometry_msgs::Pose2D solution;
 };
