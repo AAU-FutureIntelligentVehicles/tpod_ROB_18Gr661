@@ -59,7 +59,7 @@ public:
             if(atan2(path_points.x,path_points.y) <= VIEWING_ANGLE/2) //alpha <= VIEWING_ANGLE/2){
             {
                 // set the solution
-                solution = *path_points;
+                solution = path_points;
                 float determinant = car_vecx * p_vecy;// - car_vecy * p_vecx;                      //checking if the aiming vector is on the right hand side or left hand side. (should the cart turn right or left)
                 if (determinant < 0)
                 {
