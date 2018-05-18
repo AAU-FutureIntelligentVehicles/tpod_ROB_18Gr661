@@ -87,8 +87,6 @@ public:
     //    std::cout<<"\nThe next point is "<<path_points[1].x<<","<<path_points[1].y<<" | "<<path_points[1].theta<<std::endl;
     //}
 
-};
-
 
 
 
