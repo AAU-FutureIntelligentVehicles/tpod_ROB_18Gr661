@@ -29,7 +29,7 @@ public:
 
 
     //whenever a point is received, this function checks if a point on the path is within the search space, if it is it calculated theta_error and sends it to the controller.
-    void Path_Point_Pub_CB(const geometry_msgs::Pose2D::ConstPtr& tpod_pose)
+    void Path_Point_Pub_CB(const geometry_msgs::Pose2D::ConstPtr& path_points)
     {
         //if(path_points.empty())
         //{
@@ -102,8 +102,8 @@ private:
 //publisher
     ros::Publisher point_pub;
 
-    geometry_msgs::Pose2D path_points;
-    geometry_msgs::Pose2D last_point;
+    //geometry_msgs::Pose2D path_points;
+    //geometry_msgs::Pose2D last_point;
     geometry_msgs::Pose2D solution;
 };
 
