@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<launch>
+
+<node name="start.sh" pkg="tpod_ROB_18Gr661" type="start.sh" />
+<node name="Path_points_node" pkg="tpod_ROB_18Gr661" type="Path_points_node" />
+<node name="controller_node" pkg="tpod_ROB_18Gr661" type="controller_node" />
+
+  <include file="$(find tpod_driver)/tpod_driver/launch/tpod_driver.launch"/>
+
+  </include>
+
+</launch>
