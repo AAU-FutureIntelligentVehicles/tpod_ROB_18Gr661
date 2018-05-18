@@ -11,7 +11,6 @@
 #define UPPER_DIST 2                  //not used in current implementation
 #define VIEWING_ANGLE 1.57         //90 degrees viewing angle
 #define WHEEL_BASE 1.64               //The wheelbase length
-#define theta 0
 
 
 class SubscriberAndPublisher
