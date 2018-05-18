@@ -35,7 +35,7 @@ public:
         //{
         //    return;
         //}
-        float alpha =  atan2(path_points.x,path_points.y)  ;                            //formula for finding an angle between two vectors
+        float alpha =  atan2(path_points.y,path_points.x)  ;                            //formula for finding an angle between two vectors
 
         if(path_points.x==0&&path_points.y==0)
         {
