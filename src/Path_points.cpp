@@ -9,7 +9,7 @@
 
 #define LOWER_DIST 1.6                //The distance the cart look ahead is between 1.6 and 2 meter
 #define UPPER_DIST 2                  //not used in current implementation
-#define VIEWING_ANGLE 1.57         //90 degrees viewing angle
+#define WHEEL_ANGLE 1.57         //90 degrees viewing angle
 #define WHEEL_BASE 1.64               //The wheelbase length
 
 
@@ -35,46 +35,50 @@ public:
         //{
         //    return;
         //}
+        float alpha =  atan2(path_points.x,path_points.y)  ;                            //formula for finding an angle between two vectors
+
         if(path_points.x==0&&path_points.y==0)
         {
             solution.theta = 1000;
             point_pub.publish(solution);
         }
+        else //if(alpha <= WHEEL_ANGLE/2) //alpha <= VIEWING_ANGLE/2){
+        {
+            solution.theta = alpha;
+            point_pub.publish(solution);
+        }
+        return;
+    }
+                // set the solution
+                //solution = path_points;
+                //float determinant = car_vecx * p_vecy;// - car_vecy * p_vecx;                      //checking if the aiming vector is on the right hand side or left hand side. (should the cart turn right or left)
+                //if (determinant < 0)
+                //{
+                //    solution.theta = -alpha;
+                //}
+                //else
+
+
+
+        //    ++itter; // try the next point.
+        //}
+
         //        std::cout<<"x =: "<<path_points.x<<"y ="<<path_points.y<<std::endl;
         //        return;}
 
         //for (auto itter = path_points)
         //{
-            //calculate angle between cart vector and aiming vector
-            float car_vecx = 1;                 //cos(theta)= 1
-            //  float car_vecy = sin(theta) ;     because theta=0 and cart direction doesn't matter this cancels out.
-            float p_vecx = cos(path_points.x) ;
-            float p_vecy = sin(path_points.y) ;
-            float dotprod = car_vecx * p_vecx; //+ car_vecy * p_vecy;                           //Finding the dotproduct between the two vectors
-            float norm_tpod = sqrt(car_vecx * car_vecx); //+ car_vecy * car_vecy);               //findin the length of the cart vector
-            float norm_itter = sqrt(p_vecx * p_vecx + p_vecy * p_vecy);                         //findin the length of the Aiming vector
-            float alpha = acos(dotprod/(norm_tpod*norm_itter));
-            alpha =  atan2(path_points.x,path_points.y)  ;                            //formula for finding an angle between two vectors
-            // is the angle within our viweing angle
-            if(atan2(path_points.x,path_points.y) <= VIEWING_ANGLE/2) //alpha <= VIEWING_ANGLE/2){
-            {
-                // set the solution
-                solution = path_points;
-                float determinant = car_vecx * p_vecy;// - car_vecy * p_vecx;                      //checking if the aiming vector is on the right hand side or left hand side. (should the cart turn right or left)
-                if (determinant < 0)
-                {
-                    solution.theta = -alpha;
-                }
-                else
-                    solution.theta = alpha;
-                point_pub.publish(solution);
+        //calculate angle between cart vector and aiming vector
+        //float dotprod = car_vecx * p_vecx; //+ car_vecy * p_vecy;                           //Finding the dotproduct between the two vectors
+        //float norm_tpod = sqrt(car_vecx * car_vecx); //+ car_vecy * car_vecy);               //findin the length of the cart vector
+        //float norm_itter = sqrt(p_vecx * p_vecx + p_vecy * p_vecy);                         //findin the length of the Aiming vector
+        //float alpha = acos(dotprod/(norm_tpod*norm_itter));
 
-            }
-            return;
-
-        //    ++itter; // try the next point.
-        //}
-    }
+        //float car_vecx = 1;                 //cos(theta)= 1
+        //  float car_vecy = sin(theta) ;     because theta=0 and cart direction doesn't matter this cancels out.
+        //float p_vecx = cos(path_points.x) ;
+        //float p_vecy = sin(path_points.y) ;
+        // is the angle within our viweing angle
     // we only get here if we went through the whole path
     // if there is only one point left we keep publishing a last point 1 m away from the last point
     // to ensure that the car drives all the way to the last path point.
