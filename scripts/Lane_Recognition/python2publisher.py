@@ -2,11 +2,11 @@
 import rospy
 import sys
 from std_msgs.msg import String
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Pose2D
 
 def talker():
-	pub = rospy.Publisher('chatter', Vector3, queue_size=10)
-	rospy.init_node('talker', anonymous=True)
+	pub = rospy.Publisher('point_in', Pose2D, queue_size=10)
+	rospy.init_node('Py3toROS', anonymous=True)
 	rate = rospy.Rate(10)
 	while not rospy.is_shutdown():
 		#for line in sys.stdin:
@@ -15,7 +15,7 @@ def talker():
 			#hello_str = "hello world %s" % input
 			#rospy.loginfo(hello_str)
 			data = eval(input)
-			pubmsg = Vector3(data[0], data[1], 0)
+			pubmsg = Pose2D(data[0], data[1], 0)
 			pub.publish(pubmsg)
 			rate.sleep()
 

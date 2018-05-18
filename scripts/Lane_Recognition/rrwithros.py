@@ -40,7 +40,7 @@ def main():
 
             points = rr.compute_center(classes, feat_col, point_cloud.get_data()[:704, :, :3])
             points = np.asarray(points)/1000
-            print([points[0], points[1]])
+            print([points[1], points[0]])
 
 
 
