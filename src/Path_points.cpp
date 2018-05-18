@@ -38,7 +38,7 @@ public:
         if(path_points.x==0&&path_points.y==0)
         {
             solution.theta = 1000;
-            point_pub.publish(solution)
+            point_pub.publish(solution);
         }
         //        std::cout<<"x =: "<<path_points.x<<"y ="<<path_points.y<<std::endl;
         //        return;}
@@ -51,18 +51,16 @@ public:
             float p_vecx = cos(itter->x) ;
             float p_vecy = sin(itter->y) ;
             float dotprod = car_vecx * p_vecx; //+ car_vecy * p_vecy;                           //Finding the dotproduct between the two vectors
-            float norm_tpod = sqrt(car_vecx * car_vecx; //+ car_vecy * car_vecy);               //findin the length of the cart vector
-                                   float norm_itter = sqrt(p_vecx * p_vecx + p_vecy * p_vecy);                         //findin the length of the Aiming vector
-
-                                   float alpha = acos(dotprod/(norm_tpod*norm_itter));                                 //formula for finding an angle between two vectors
-
-                                   // is the angle within our viweing angle
-                                   if(atan2(itter->x,itter->y) <= VIEWING_ANGLE/2) //alpha <= VIEWING_ANGLE/2){
-        {
-            // set the solution
-            solution = *itter;
-            float determinant = car_vecx * p_vecy;// - car_vecy * p_vecx;                      //checking if the aiming vector is on the right hand side or left hand side. (should the cart turn right or left)
-            if (determinant < 0)
+            float norm_tpod = sqrt(car_vecx * car_vecx); //+ car_vecy * car_vecy);               //findin the length of the cart vector
+            float norm_itter = sqrt(p_vecx * p_vecx + p_vecy * p_vecy);                         //findin the length of the Aiming vector
+            float alpha = acos(dotprod/(norm_tpod*norm_itter));                                 //formula for finding an angle between two vectors
+            // is the angle within our viweing angle
+            if(atan2(itter->x,itter->y) <= VIEWING_ANGLE/2) //alpha <= VIEWING_ANGLE/2){
+            {
+                // set the solution
+                solution = *itter;
+                float determinant = car_vecx * p_vecy;// - car_vecy * p_vecx;                      //checking if the aiming vector is on the right hand side or left hand side. (should the cart turn right or left)
+                if (determinant < 0)
                 {
                     solution.theta = -alpha;
                 }
@@ -73,7 +71,7 @@ public:
             }
             return;
 
-                  ++itter; // try the next point.
+            ++itter; // try the next point.
         }
     }
     // we only get here if we went through the whole path
@@ -92,14 +90,14 @@ public:
 private:
 
 //Ros stuff
-ros::NodeHandle n;
+    ros::NodeHandle n;
 
 //setting up subscriptions
-ros::Subscriber location_point_sub;
+    ros::Subscriber location_point_sub;
 //publisher
-ros::Publisher point_pub;
+    ros::Publisher point_pub;
 
-geometry_msgs::Pose2D path_points;
-geometry_msgs::Pose2D last_point;
-geometry_msgs::Pose2D solution;
+    geometry_msgs::Pose2D path_points;
+    geometry_msgs::Pose2D last_point;
+    geometry_msgs::Pose2D solution;
 };
