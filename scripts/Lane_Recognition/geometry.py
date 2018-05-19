@@ -46,3 +46,11 @@ def pcl_lookup (contour, point_cloud, rot_ =(0.3, 0, 0)):
 			continue
 		new_contours.append([a]) #20000 is added such that the values in the list are positive #new_contours.append([[rot_pc[point[0,0],point[0,1], 0], rot_pc[point[0,0],point[0,1], 2]]]) 
 	return np.asarray(new_contours)
+	
+	
+def rotate_pc(point_cloud, rot_ =(0.3, 0, 0))
+	rot_mat = rot(rot_[0], rot_[1], rot_[2]) 
+	rot_pc= np.asarray(point_cloud)[..., :3].dot(rot_mat)
+	return rot_pc
+	
+	
