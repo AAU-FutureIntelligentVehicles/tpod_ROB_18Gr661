@@ -8,6 +8,7 @@ def talker():
 	pub = rospy.Publisher('point_in', Pose2D, queue_size=10)
 	rospy.init_node('Py3toROS', anonymous=True)
 	rate = rospy.Rate(10)
+	_ = sys.stdin.readline()
 	while not rospy.is_shutdown():
 		#for line in sys.stdin:
 		input = sys.stdin.readline()
