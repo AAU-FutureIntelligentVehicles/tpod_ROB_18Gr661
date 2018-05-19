@@ -65,11 +65,6 @@ def compute_haralick(crop_img):
 
     haralick_arr = haralick_arr / scaling_factor
 
-
-
-
-
-
     window_count = dims[0]//windowSize
     array = haralick_arr.reshape((window_count, -1, 5)).repeat(windowSize, axis = 0).repeat(windowSize, axis = 1)
 
@@ -96,6 +91,9 @@ def get_features(image, color_feat = True):
 def compute_center(classes, feat_col, point_cloud):
 
 
+
+    #rot_mat = rot(rot_[0], rot_[1], rot_[2]) 
+    #point_cloud = point_cloud_.dot(rot_mat)
     kernel = np.ones((9,9),np.uint8) #(15,15)
     classes = classes.astype(np.uint8)
     median = cv2.medianBlur(classes, 15)#(31, 31)
@@ -136,7 +134,7 @@ def compute_center(classes, feat_col, point_cloud):
         #cv2.rectangle(road_geometry,(0, 40*i),(800, 40),(0,255,0),1)
 
         #find contours of the part of the image we want to find the handle in 
-        road_cont = cv2.findContours(road_geometry[1600//scaling_factor:2000//scaling_factor,:,0].copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        road_cont = cv2.findContours(road_geometry[lower_limit_road//scaling_factor:upper_limit_road//scaling_factor,:,0].copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         #compute the moments of the  contour
         M = cv2.moments(road_cont[0])
 
@@ -150,10 +148,32 @@ def compute_center(classes, feat_col, point_cloud):
             return center_point
     return [0,0]
 
+def minimumdistance(point):
+    print (point.shape, point_)
+    xdistance = point[0] - point_[0]
+    ydistance = point[1] - point_[1]
+    return math.sqrt(xdistance**2 + ydistance**2)
 
+def ori_lookup_old(pointcloud, point):
+    pointcloud_ = pointcloud.reshape((-1, 3))
+    global point_
+    point_ = point
+
+    center_point = min(pointcloud, key = minimumdistance)
+    return [center_point % 1280, center_point // 1280]
+
+def ori_lookup(pointcloud, point):
+    pointcloud_ = pointcloud - (point + (0,))
+    pointcloud_ = pointcloud_ * pointcloud_
+    pointcloud_ = pointcloud_[..., 0] + pointcloud_[..., 2]
+    pointcloud_ = np.sqrt(pointcloud_)
+    return np.unravel_index( np.nanargmin(pointcloud_, axis=None), pointcloud_.shape)
 
 
 def show(classes, feat_col, point_cloud):
+
+    #rot_mat = rot(rot_[0], rot_[1], rot_[2]) 
+    #rot_pc= point_cloud.get_data()[..., :3].dot(rot_mat)
     blank_image = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
     
     classified = np.dstack((blank_image, classes))
@@ -174,16 +194,11 @@ def show(classes, feat_col, point_cloud):
     opening = cv2.morphologyEx(median, cv2.MORPH_OPEN, kernel)        
     closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
 
-
-
-
     im2, contours, hierarchy = cv2.findContours(closing, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cont_img = np.array(feat_col)
 
 
     if len(contours) != 0:
-        
-        
 
         c = max(contours, key = cv2.contourArea)
 
@@ -196,45 +211,26 @@ def show(classes, feat_col, point_cloud):
         opening1 = cv2.morphologyEx(median1, cv2.MORPH_OPEN, kernel)        
         closing1 = cv2.morphologyEx(opening1, cv2.MORPH_CLOSE, kernel)
 
-
-        #print(c[0][0][1], c.shape, type(c))
-        #x,y,w,h = cv2.boundingRect(c)
-    
-        #cv2.rectangle(cont_img,(x,y),(x+w,y+h),(0,255,0),2)
-
-        #print(x, y, w, h)
-
-        #cropped = cont_img[y:y+h, x:x+w]
-        #cropped1 = closing[y:y+h, x:x+w]
-
-
-        #Perspective transform
-        #Perspective matricies both regular and inverse
-        
-        #Pts =  np.float32([[0, 0], [0, h], [w, h], [w, 0]])
-        #Pts_inv = np.float32([[0, 0], [w-(w/1.5), h], [w-(w/2), h], [w, 0]]) #np.float32([[500, dims[0]], [700, dims[0]], [0, 0], [dims[1], 0]]) (w/1.5) (w/3)
-
-        #M =cv2.getPerspectiveTransform(Pts, Pts_inv)
-        #Minv = cv2.getPerspectiveTransform(Pts, Pts_inv)
-        #warped_img = cv2.warpPerspective(cropped1, M, (w, h))
-
         point_cloud = np.asarray(point_cloud)
 
-
         cont = g.pcl_lookup(c, point_cloud)
-        #print (c.dtype)
+
         cont = np.int32(cont)
         road_geometry = np.zeros((400, 800, 3), dtype = 'uint8')
 
         cv2.drawContours(road_geometry, [cont], -1, (255,255,255), -1)
 
         center_points = []
+        center_points_mm = []
+        scaling_factor = 50 #convert back to milimetres
+        centering_factor = 20000 #recenter the points
+        lower_limit_road = 1600
+        upper_limit_road = 2000
 
         for i in range(10):
             a = np.zeros((400, 800))
             a[i*40:i*40+40, ...]=1
             b=np.logical_and(road_geometry[..., 0], a).astype('uint8')
-            #print(road_geometry[0:40,:,0], road_geometry[0:40,:,0].dtype)
             #cv2.rectangle(road_geometry,(0, 40*i),(800, 40),(0,255,0),1)
 
             road_cont = cv2.findContours(road_geometry[i*40:i*40+40,:,0].copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -242,10 +238,20 @@ def show(classes, feat_col, point_cloud):
             if M["m00"] > 1:
                 cX = int(M["m10"] / M["m00"])
                 cY = int(M["m01"] / M["m00"])
+                center_point = [cX, cY]
                 center_points.append((cX, cY + i*40))
+                center_point[0] = center_point [0]*scaling_factor  - centering_factor
+                center_point[1] = center_point [1]*scaling_factor  + i*40*scaling_factor
+                center_points_mm.append(tuple(center_point))
+        print (center_points, center_points_mm)
 
+        ori_centers = []
         for points in center_points:
             cv2.circle(road_geometry, points, 5, (255, 0, 0), -1)
+            ori_center = ori_lookup(point_cloud, points)
+            print(ori_center)
+            cv2.circle(cont_img, ori_center, 5, (255, 0, 0), -1)           
+            ori_centers.append(ori_center)
             
 
 
@@ -276,9 +282,9 @@ def show(classes, feat_col, point_cloud):
         plt.title('Road Contour')
         plt.imshow(closing1)
         plt.show()
-        #plt.subplot(233)
-        #plt.imshow(warped_img)
-        #plt.title('Perspective Transformation')
+        plt.subplot(233)
+        plt.imshow(feat_col)
+        plt.title('Perspective Transformation')
 
         plt.subplot(234)
         plt.imshow(road_geometry,origin='lower')
