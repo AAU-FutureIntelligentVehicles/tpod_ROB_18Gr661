@@ -7,7 +7,7 @@ import numpy as np
 import sys
 import matplotlib.image as mpimg
 import cv2
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import glob
 from sklearn.externals import joblib
 from sklearn.svm import LinearSVC
@@ -92,8 +92,7 @@ def compute_center(classes, feat_col, point_cloud):
 
 
 
-    #rot_mat = rot(rot_[0], rot_[1], rot_[2]) 
-    #point_cloud = point_cloud_.dot(rot_mat)
+    point_cloud_ = g.rotate_pc(point_cloud)
     kernel = np.ones((9,9),np.uint8) #(15,15)
     classes = classes.astype(np.uint8)
     median = cv2.medianBlur(classes, 15)#(31, 31)
@@ -111,10 +110,8 @@ def compute_center(classes, feat_col, point_cloud):
 
         blank_img = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
 
-        point_cloud = np.asarray(point_cloud)
 
-
-        cont = g.pcl_lookup(c, point_cloud)
+        cont = g.pcl_lookup(c, point_cloud_)
         #print (c.dtype)
         cont = np.int32(cont)
         road_geometry = np.zeros((400, 800, 3), dtype = 'uint8')
@@ -148,22 +145,8 @@ def compute_center(classes, feat_col, point_cloud):
             return center_point
     return [0,0]
 
-def minimumdistance(point):
-    print (point.shape, point_)
-    xdistance = point[0] - point_[0]
-    ydistance = point[1] - point_[1]
-    return math.sqrt(xdistance**2 + ydistance**2)
-
-def ori_lookup_old(pointcloud, point):
-    pointcloud_ = pointcloud.reshape((-1, 3))
-    global point_
-    point_ = point
-
-    center_point = min(pointcloud, key = minimumdistance)
-    return [center_point % 1280, center_point // 1280]
-
 def ori_lookup(pointcloud, point):
-    pointcloud_ = pointcloud - (point + (0,))
+    pointcloud_ = pointcloud - (point[0] , 0, point[1])
     pointcloud_ = pointcloud_ * pointcloud_
     pointcloud_ = pointcloud_[..., 0] + pointcloud_[..., 2]
     pointcloud_ = np.sqrt(pointcloud_)
@@ -172,8 +155,9 @@ def ori_lookup(pointcloud, point):
 
 def show(classes, feat_col, point_cloud):
 
-    #rot_mat = rot(rot_[0], rot_[1], rot_[2]) 
-    #rot_pc= point_cloud.get_data()[..., :3].dot(rot_mat)
+
+    point_cloud_ = g.rotate_pc(point_cloud)
+
     blank_image = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
     
     classified = np.dstack((blank_image, classes))
@@ -211,9 +195,7 @@ def show(classes, feat_col, point_cloud):
         opening1 = cv2.morphologyEx(median1, cv2.MORPH_OPEN, kernel)        
         closing1 = cv2.morphologyEx(opening1, cv2.MORPH_CLOSE, kernel)
 
-        point_cloud = np.asarray(point_cloud)
-
-        cont = g.pcl_lookup(c, point_cloud)
+        cont = g.pcl_lookup(c, point_cloud_)
 
         cont = np.int32(cont)
         road_geometry = np.zeros((400, 800, 3), dtype = 'uint8')
@@ -248,7 +230,7 @@ def show(classes, feat_col, point_cloud):
         ori_centers = []
         for points in center_points:
             cv2.circle(road_geometry, points, 5, (255, 0, 0), -1)
-            ori_center = ori_lookup(point_cloud, points)
+            ori_center = ori_lookup(point_cloud_, points)
             print(ori_center)
             cv2.circle(cont_img, ori_center, 5, (255, 0, 0), -1)           
             ori_centers.append(ori_center)
@@ -310,17 +292,19 @@ def show(classes, feat_col, point_cloud):
 
 
 def classify(image, point_cloud, classifier):
+
+    point_cloud_ = g.rotate_pc(point_cloud)
+    print (point_cloud_.shape)
     haralick = compute_haralick(image)
 
 
     haralick = haralick.reshape((-1, 5))
 
 
-
     feature = get_features(image, True)
     feature = np.concatenate((feature, haralick), 1)
 
-    depthroad = 1- g.is_road(point_cloud.get_data()[:704, :, :3])
+    depthroad = 1- g.is_road(point_cloud_)
 
     classes = classifier.predict(feature)
     classes = classes.reshape(704, 1280)
@@ -333,10 +317,11 @@ def ZED_live():
 
     # Create a PyInitParameters object and set configuration parameters
     init_params = zcam.PyInitParameters()
-    init_params.camera_resolution = sl.PyRESOLUTION.PyRESOLUTION_HD720  # Use HD720 video mode (default fps: 60)
+    init_params.camera_resolution = sl.PyRESOLUTION.PyRESOLUTION_HD720
+    init_params.depth_mode = sl.PyDEPTH_MODE.PyDEPTH_MODE_PERFORMANCE   # Use HD720 video mode (default fps: 60)
     # Use a right-handed Y-up coordinate system
-    init_params.coordinate_system = sl.PyCOORDINATE_SYSTEM.PyCOORDINATE_SYSTEM_RIGHT_HANDED_Y_UP
-    init_params.coordinate_units = sl.PyUNIT.PyUNIT_METER  # Set units in meters
+    #init_params.coordinate_system = sl.PyCOORDINATE_SYSTEM.PyCOORDINATE_SYSTEM_RIGHT_HANDED_Y_UP
+    init_params.coordinate_units = sl.PyUNIT.PyUNIT_MILLIMETER  # Set units in meters
     err = zed.open(init_params)
     if err != tp.PyERROR_CODE.PySUCCESS:
         exit(1)
@@ -383,7 +368,7 @@ def main():
         #zed.grab(runtime_parameters)
 
 
-    zed.set_svo_position(3032)
+    #zed.set_svo_position(3032)
 
     while i < 1:
 
@@ -404,6 +389,6 @@ def main():
             #show(classes, feat_col, point_cloud.get_data()[:704, :, :3])
 
 
-
+ 
 if __name__ == '__main__':
     main()
