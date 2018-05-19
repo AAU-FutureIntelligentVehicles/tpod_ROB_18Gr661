@@ -7,7 +7,7 @@ import RoadRecognition as rr
 
 def main():
 
-    zed, runtime_parameters = rr.ZED_SVO()
+    zed, runtime_parameters = rr.ZED_live()  #ZED_live() is for live feed and ZED_SVO() is for loading an SVO from the commandline.
     i = 0
     image = rr.core.PyMat()
     depth = rr.core.PyMat()
@@ -18,8 +18,8 @@ def main():
 
     #print("own data start \n")
 
-
-    zed.set_svo_position(3032)
+    for j in range(60):             #Let the camera start up when using ZED_live
+        zed.grab(runtime_parameters)
 
     while i < 100:
 
@@ -38,7 +38,7 @@ def main():
             classes = rr.classify(feat_col, point_cloud, classifier)
 
 
-            points = rr.compute_center(classes, feat_col, point_cloud.get_data()[:704, :, :3])
+            points = rr.show(classes, feat_col, point_cloud.get_data()[:704, :, :3])
             points = np.asarray(points)/1000
             print([points[1], points[0]])
 
