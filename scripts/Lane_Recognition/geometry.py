@@ -1,5 +1,5 @@
 import numpy as np
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 
 #Takes angles and returns rotation matrix
 def rot(r, p, y):
@@ -26,16 +26,16 @@ def display_depth(mat, scaling):
 #takes a point cloud, a set of Euler angles in radians and a threshold in millimeters
 #returns a binary image showing the area of the point cloud that is below this level after rotation
 def is_road(img, rot_=(0.3, 0, 0), thresh = 1700):
-	rot_mat = rot(rot_[0], rot_[1], rot_[2]) 
-	rot_img = np.nan_to_num(img).dot(rot_mat)
+	#rot_mat = rot(rot_[0], rot_[1], rot_[2]) 
+	rot_img = np.nan_to_num(img)#.dot(rot_mat)
 	road = (rot_img[..., 1] < thresh)*1
 	return road
 	
 #takes a contour and a point cloud from the same image, and looks up the points from the contour
 #Returns the world coordinates of the points 
 def pcl_lookup (contour, point_cloud, rot_ =(0.3, 0, 0)):
-	rot_mat = rot(rot_[0], rot_[1], rot_[2]) 
-	rot_pc= point_cloud.dot(rot_mat)
+	#rot_mat = rot(rot_[0], rot_[1], rot_[2]) 
+	rot_pc= point_cloud #.dot(rot_mat)
 	new_contours = []
 	for point in contour:
 		#print(point[0,1])
@@ -48,9 +48,9 @@ def pcl_lookup (contour, point_cloud, rot_ =(0.3, 0, 0)):
 	return np.asarray(new_contours)
 	
 	
-def rotate_pc(point_cloud, rot_ =(0.3, 0, 0))
-	rot_mat = rot(rot_[0], rot_[1], rot_[2]) 
-	rot_pc= np.asarray(point_cloud)[..., :3].dot(rot_mat)
+def rotate_pc(point_cloud, rot_ =(0.3, 0, 0)):
+	rot_mat = rot(rot_[0], rot_[1], rot_[2])
+	rot_pc= point_cloud.get_data()[:704,:, :3].dot(rot_mat)
 	return rot_pc
 	
 	
