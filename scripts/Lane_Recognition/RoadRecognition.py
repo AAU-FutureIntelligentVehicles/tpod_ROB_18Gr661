@@ -120,8 +120,8 @@ def compute_center(classes, feat_col, point_cloud):
 
         scaling_factor = 50 #convert back to milimetres
         centering_factor = 20000 #recenter the points
-        lower_limit_road = 1600
-        upper_limit_road = 2000
+        lower_limit_road = 3200
+        upper_limit_road = 3600
 
         #for i in range(10):
         a = np.zeros((400, 800))
