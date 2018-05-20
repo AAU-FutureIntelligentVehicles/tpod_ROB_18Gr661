@@ -21,11 +21,13 @@ def main():
     for j in range(60):             #Let the camera start up when using ZED_live
         zed.grab(runtime_parameters)
     #print("test")
-    while i < 100:
+    while i < 10000:
 
         i = i + 1
         # A new image is available if grab() returns PySUCCESS
         if zed.grab(runtime_parameters) == rr.tp.PyERROR_CODE.PySUCCESS:
+            zed.grab(runtime_parameters)
+            zed.grab(runtime_parameters)
             # Retrieve left image
             zed.retrieve_image(image, rr.sl.PyVIEW.PyVIEW_LEFT)
             zed.retrieve_measure(point_cloud, rr.sl.PyMEASURE.PyMEASURE_XYZRGBA)
