@@ -7,7 +7,7 @@ import numpy as np
 import sys
 import matplotlib.image as mpimg
 import cv2
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import glob
 from sklearn.externals import joblib
 from sklearn.svm import LinearSVC
@@ -150,7 +150,8 @@ def ori_lookup(pointcloud, point):
     pointcloud_ = pointcloud_ * pointcloud_
     pointcloud_ = pointcloud_[..., 0] + pointcloud_[..., 2]
     pointcloud_ = np.sqrt(pointcloud_)
-    return np.unravel_index( np.nanargmin(pointcloud_, axis=None), pointcloud_.shape)
+    coordiantes = np.unravel_index( np.nanargmin(pointcloud_, axis=None), pointcloud_.shape)
+    return (coordiantes[1], coordiantes[0])
 
 
 def show(classes, feat_col, point_cloud):
@@ -228,7 +229,7 @@ def show(classes, feat_col, point_cloud):
         print (center_points, center_points_mm)
 
         ori_centers = []
-        for points in center_points:
+        for points in center_points_mm:
             cv2.circle(road_geometry, points, 5, (255, 0, 0), -1)
             ori_center = ori_lookup(point_cloud_, points)
             print(ori_center)
@@ -294,7 +295,7 @@ def show(classes, feat_col, point_cloud):
 def classify(image, point_cloud, classifier):
 
     point_cloud_ = g.rotate_pc(point_cloud)
-    print (point_cloud_.shape)
+    #print (point_cloud_.shape)
     haralick = compute_haralick(image)
 
 
@@ -305,7 +306,7 @@ def classify(image, point_cloud, classifier):
     feature = np.concatenate((feature, haralick), 1)
 
     depthroad = 1- g.is_road(point_cloud_)
-
+    #classifier(intercept_scaling = 0.2)
     classes = classifier.predict(feature)
     classes = classes.reshape(704, 1280)
     classes = np.logical_and(classes, depthroad)
@@ -359,7 +360,7 @@ def main():
     depth = core.PyMat()
     point_cloud = core.PyMat()
     confidence = core.PyMat()
-    classifier = joblib.load("Road_classifier.pkl")
+    classifier = joblib.load("Road_classifier_TEST.pkl")
 
 
     print("own data start \n")
