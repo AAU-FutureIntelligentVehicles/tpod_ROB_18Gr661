@@ -18,8 +18,8 @@ std_msgs::Float64 accelerator_position;
 
 //Callback function updating global variables from the path planner
 void updatePosition_cb(geometry_msgs::Pose2D point){
-	turningAngle = point.theta;														//This is Theta Error. Turning angle received from the path point package.
-	accelerator_position.data = 1;												//This is what we send to the golf cart accellerator. Having it in the callback makes sure we only drive, when we have started receiving points.
+	turningAngle = point.theta;			//This is Theta Error. Turning angle received from the path point package.
+	accelerator_position.data = 0.5;		//This is what we send to the golf cart accellerator. Having it in the callback makes sure we only drive, when we have started receiving points.
 }
 
 //Callback function updating the global variable if we are going to collide and we shoule brake.

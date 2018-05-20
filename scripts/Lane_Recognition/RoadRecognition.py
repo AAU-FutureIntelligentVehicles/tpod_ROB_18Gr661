@@ -294,7 +294,7 @@ def show(classes, feat_col, point_cloud):
 def classify(image, point_cloud, classifier):
 
     point_cloud_ = g.rotate_pc(point_cloud)
-    print (point_cloud_.shape)
+    #print (point_cloud_.shape)
     haralick = compute_haralick(image)
 
 

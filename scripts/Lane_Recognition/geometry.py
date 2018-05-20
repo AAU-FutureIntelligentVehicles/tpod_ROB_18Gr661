@@ -25,7 +25,7 @@ def display_depth(mat, scaling):
 
 #takes a point cloud, a set of Euler angles in radians and a threshold in millimeters
 #returns a binary image showing the area of the point cloud that is below this level after rotation
-def is_road(img, rot_=(0.3, 0, 0), thresh = 1700):
+def is_road(img, rot_=(0.3, 0, 0), thresh = 1500):
 	#rot_mat = rot(rot_[0], rot_[1], rot_[2]) 
 	rot_img = np.nan_to_num(img)#.dot(rot_mat)
 	road = (rot_img[..., 1] < thresh)*1

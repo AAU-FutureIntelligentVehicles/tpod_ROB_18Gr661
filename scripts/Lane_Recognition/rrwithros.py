@@ -20,7 +20,7 @@ def main():
 
     for j in range(60):             #Let the camera start up when using ZED_live
         zed.grab(runtime_parameters)
-
+    #print("test")
     while i < 100:
 
         i = i + 1
@@ -38,9 +38,9 @@ def main():
             classes = rr.classify(feat_col, point_cloud, classifier)
 
 
-            points = rr.show(classes, feat_col, point_cloud.get_data()[:704, :, :3])
+            points = rr.compute_center(classes, feat_col, point_cloud)
             points = np.asarray(points)/1000
-            print([points[1], points[0]])
+            print([points[1], -points[0]])
 
 
 
