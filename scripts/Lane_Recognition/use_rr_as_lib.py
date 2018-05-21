@@ -19,7 +19,7 @@ def main():
     print("own data start \n")
 
 
-    zed.set_svo_position(3032)
+    zed.set_svo_position(2500)
 
     while i < 1:
 
@@ -35,9 +35,12 @@ def main():
 
             feat_img = image.get_data()[:, : , :3]
             feat_col = feat_img[:704, :, :3]
+            print(classifier.intercept_scaling)
+            classifier.intercept_ = classifier.intercept_ * -70 #This is the intercept value that has to be changed.
             classes = rr.classify(feat_col, point_cloud, classifier)
+            print(classes, classes.shape)
 
-            rr.show(classes, feat_col, point_cloud.get_data()[:704, :, :3])
+            #rr.show(classes, feat_col, point_cloud)
 
 
 
