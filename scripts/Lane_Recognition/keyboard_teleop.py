@@ -49,20 +49,20 @@ if __name__=="__main__":
 
 		if(state == ON_MODE):
 		# Step operation: Cross-up to increase speed by 10 and cross-down to decrease it
-			if ((key == 'w') and count>=DEBOUNCE_COUNT):
+			if (key == 'w'):
 				vel += 0.1
-			if ((key == 's') and count>=DEBOUNCE_COUNT):
+			if (key == 's'):
 				vel -= 0.1
 	
 			# To turn keep pressing cross left/right button.
-			if (key == 'd'):
-				turn -= -1000
 			if (key == 'a'):
+				turn -= -1000
+			if (key == 'd'):
 				turn += -1000
 
 			# Check for saturation
 			if (vel>SAT_VEL):
-		 		vel_left=SAT_UP
+		 		vel_left=SAT_VEL
 			if (vel < 0):
 				vel = 0
 				
