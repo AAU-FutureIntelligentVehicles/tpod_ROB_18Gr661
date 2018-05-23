@@ -1,0 +1,10 @@
+theta = 0;
+car_vecx = cos(theta)
+car_vecy = sin(theta)
+p_vecx = cos(1.7)
+p_vecy = sin(-0.6)
+dotprod = car_vecx * p_vecx + car_vecy * p_vecy
+norm_tpod = sqrt(car_vecx * car_vecx + car_vecy * car_vecy)
+norm_itter = sqrt(p_vecx * p_vecx + p_vecy * p_vecy)
+alpha = acos(dotprod/(norm_tpod*norm_itter))
+determinant = car_vecx * p_vecy - car_vecy * p_vecx

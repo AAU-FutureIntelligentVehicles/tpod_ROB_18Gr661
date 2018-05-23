@@ -1,0 +1,3 @@
+#ifndef CF_vehicle_animation_sim_H__
+#define CF_vehicle_animation_sim_H__
+#endif
