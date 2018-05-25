@@ -4,10 +4,11 @@ import sys
 import cv2
 from sklearn.externals import joblib
 import RoadRecognition as rr
+import time
 
 def main():
 
-    zed, runtime_parameters = rr.ZED_live()  #ZED_live() is for live feed and ZED_SVO() is for loading an SVO from the commandline.
+    zed, runtime_parameters = rr.ZED_SVO()  #ZED_live() is for live feed and ZED_SVO() is for loading an SVO from the commandline.
     i = 0
     image = rr.core.PyMat()
     depth = rr.core.PyMat()
@@ -17,11 +18,11 @@ def main():
 
 
     #print("own data start \n")
-
-    for j in range(60):             #Let the camera start up when using ZED_live
-        zed.grab(runtime_parameters)
-    #print("test")
-    while i < 100:
+    t1 = time.time()
+    #for j in range(60):             #Let the camera start up when using ZED_live
+        #zed.grab(runtime_parameters)
+    zed.set_svo_position(178)
+    while i < 50:
 
         i = i + 1
         # A new image is available if grab() returns PySUCCESS
@@ -43,6 +44,9 @@ def main():
             print([points[1], -points[0]])
 
 
+
+    t2 = time.time()
+    print(t2-t1)
 
 if __name__ == '__main__':
     main()
