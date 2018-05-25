@@ -11,7 +11,7 @@ def main():
     zed, runtime_parameters = rr.ZED_SVO()  #ZED_live() is for live feed and ZED_SVO() is for loading an SVO from the commandline.
     i = 0
     image = rr.core.PyMat()
-    depth = rr.core.PyMat()
+    #depth = rr.core.PyMat()
     point_cloud = rr.core.PyMat()
     confidence = rr.core.PyMat()
     classifier = joblib.load("./Road_classifier.pkl")
@@ -23,14 +23,15 @@ def main():
         #zed.grab(runtime_parameters)
     zed.set_svo_position(178)
     while i < 50:
-
         i = i + 1
         # A new image is available if grab() returns PySUCCESS
         if zed.grab(runtime_parameters) == rr.tp.PyERROR_CODE.PySUCCESS:
+            zed.grab(runtime_parameters)
+            zed.grab(runtime_parameters)
             # Retrieve left image
             zed.retrieve_image(image, rr.sl.PyVIEW.PyVIEW_LEFT)
             zed.retrieve_measure(point_cloud, rr.sl.PyMEASURE.PyMEASURE_XYZRGBA)
-            zed.retrieve_measure(depth, rr.sl.PyMEASURE.PyMEASURE_DEPTH)
+            #zed.retrieve_measure(depth, rr.sl.PyMEASURE.PyMEASURE_DEPTH)
 
             #print(point_cloud.get_data()[240, 140, :], point_cloud.get_data()[1:, 1:, :].shape)
 
