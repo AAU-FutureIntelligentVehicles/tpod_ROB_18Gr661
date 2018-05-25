@@ -71,6 +71,7 @@ def compute_haralick(crop_img):
     #haralick_arr = haralick_arr*feature_weights
 
     haralick_arr = haralick_arr / scaling_factor
+    window_count = dims[0]//windowSize
 
     array = haralick_arr.reshape((window_count, -1, 5)).repeat(windowSize, axis = 0).repeat(windowSize, axis = 1)
 
