@@ -47,7 +47,7 @@ def _ch(roi):
 
 
 #Takes an image as input and returns an image of the "same" shape containing the haralick features
-#so a 704px*1280px*3colors image becomes a 704px*1280px*5features
+#so a 704px*1280px*3 colors image becomes a 704px*1280px*5 features image
 #The computation of the features themselves is multithreaded 
 def compute_haralick(crop_img):
     crop_img = np.array(crop_img)
@@ -73,7 +73,6 @@ def compute_haralick(crop_img):
 
     haralick_arr = haralick_arr / scaling_factor
 
-    window_count = dims[0]//windowSize
     array = haralick_arr.reshape((window_count, -1, 5)).repeat(windowSize, axis = 0).repeat(windowSize, axis = 1)
 
     return array.astype(np.float32)
@@ -137,8 +136,7 @@ def compute_center(classes, feat_col, point_cloud):
         upper_limit_road = 3600 #They are also used as handle length, since they define the 
                                 #distance from the cart to the point
 
-        #This section can be used if non-rectangular regions are desired
-        #for i in range(10): 
+        #This section can be used if non-rectangular regions are desired 
         #a = np.zeros((400, 800))
         #a[lower_limit_road//scaling_factor:upper_limit_road//scaling_factor, ...]=1 #define the region we are looking for the center points of
         #b=np.logical_and(road_geometry[..., 0], a).astype('uint8') #mask the image to the region we are looking at
@@ -158,7 +156,7 @@ def compute_center(classes, feat_col, point_cloud):
             center_point[0] = center_point [0]*scaling_factor  - centering_factor
             center_point[1] = center_point [1]*scaling_factor  + lower_limit_road 
             return center_point
-    return [0,0] #if no point was found, return 0,0
+    return [0,0] #if no point was found or the "mass" of the found contour is 0, return 0,0
 
     
 #If you have world coordinates and want pixel coordinates instead, use this function
@@ -309,20 +307,21 @@ def show(classes, feat_col, point_cloud):
     plt.title('Road Extraction')
     plt.show()
 
-
+#Takes an image, a point cloud, and a classifier (Usually loaded from a file)
+#Returns a binary image showing where both depth and SVM classification indicate road.
 def classify(image, point_cloud, classifier):
-
+    #rotate the coordinates in the point cloud
     point_cloud_ = g.rotate_pc(point_cloud)
     #print (point_cloud_.shape)
-    haralick = compute_haralick(image)
+    
+    #extract the haralick features
+    haralick = compute_haralick(image).reshape((-1, 5))
 
-
-    haralick = haralick.reshape((-1, 5))
-
-
-    feature = get_features(image, True)
+    #extract the color features
+    feature = get_features(image, True).reshape((-1, 3))
+    
+    
     feature = np.concatenate((feature, haralick), 1)
-
     depthroad = 1- g.is_road(point_cloud_)
     #classifier(intercept_scaling = 0.2)
     classes = classifier.predict(feature)
@@ -330,10 +329,10 @@ def classify(image, point_cloud, classifier):
     classes = np.logical_and(classes, depthroad)
     return classes
 
+#initializes and sets up the camera for live recognition
+#returns an object referring to the camera and the runtime parameters
 def ZED_live():
-
     zed = zcam.PyZEDCamera()
-
     # Create a PyInitParameters object and set configuration parameters
     init_params = zcam.PyInitParameters()
     init_params.camera_resolution = sl.PyRESOLUTION.PyRESOLUTION_HD720
@@ -347,7 +346,9 @@ def ZED_live():
     return zed, zcam.PyRuntimeParameters()
 
 
-
+#initializes and sets up the "camera" for recognition from a prerecorded SVO file
+#the name of the SVO file is extracted from the command line parameters used to run the program
+#returns an object referring to the camera and the runtime parameters1
 def ZED_SVO():
     zed = zcam.PyZEDCamera()
     # Create a PyInitParameters object and set configuration parameters
@@ -370,8 +371,9 @@ def ZED_SVO():
 
 
 def main():
-
+    #
     zed, runtime_parameters = ZED_SVO()
+    #zed, runtime_parameters = ZED_SVO()
     color_feat = True
     i = 0
     image = core.PyMat()
