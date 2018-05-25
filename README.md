@@ -7,3 +7,6 @@ scikit learn
 mahotas
 ZED python3 wrapper
 
+The following ROS packages need to be installed:
+tpod_driver
+geometry_msgs
