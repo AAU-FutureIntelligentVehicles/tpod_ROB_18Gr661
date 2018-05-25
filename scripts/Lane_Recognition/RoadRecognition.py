@@ -319,7 +319,7 @@ def classify(image, point_cloud, classifier):
     haralick = compute_haralick(image).reshape((-1, 5))
 
     #extract the color features
-    feature = get_features(image, True).reshape((-1, 3))
+    feature = get_features(image).reshape((-1, 3))
     
     
     feature = np.concatenate((feature, haralick), 1)
