@@ -7,7 +7,6 @@ import numpy as np
 import sys
 import matplotlib.image as mpimg
 import cv2
-import matplotlib.pyplot as plt
 import glob
 from sklearn.externals import joblib
 from sklearn.svm import LinearSVC
@@ -173,6 +172,7 @@ def ori_lookup(pointcloud, point):
 
 #function to show the intermediate results of the calculated images
 def show(classes, feat_col, point_cloud):
+    import matplotlib.pyplot as plt
     point_cloud_ = g.rotate_pc(point_cloud)
 
     blank_image = np.zeros((np.shape(feat_col)[0], np.shape(feat_col)[1],3), np.uint8)
