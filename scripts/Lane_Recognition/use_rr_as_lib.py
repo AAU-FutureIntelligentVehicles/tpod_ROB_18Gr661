@@ -22,6 +22,7 @@ def main():
     zed.set_svo_position(2500)
 
     while i < 1:
+        t1 = time.time()
 
         i = i + 1
         # A new image is available if grab() returns PySUCCESS
@@ -35,12 +36,14 @@ def main():
 
             feat_img = image.get_data()[:, : , :3]
             feat_col = feat_img[:704, :, :3]
-            print(classifier.intercept_scaling)
+            #print(classifier.intercept_scaling)
             classifier.intercept_ = classifier.intercept_ * -70 #This is the intercept value that has to be changed.
             classes = rr.classify(feat_col, point_cloud, classifier)
-            print(classes, classes.shape)
-
-            #rr.show(classes, feat_col, point_cloud)
+            points = rr.compute_center(classes, feat_col, point_cloud)
+            points = np.asarray(points)/1000
+            print([points[1], -points[0]])
+            t2 = time.time()
+            print(t2-t1)
 
 
 
