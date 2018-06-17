@@ -18,7 +18,6 @@ def main():
 
 
     #print("own data start \n")
-    t1 = time.time()
     #for j in range(60):             #Let the camera start up when using ZED_live
         #zed.grab(runtime_parameters)
     zed.set_svo_position(178)
@@ -45,9 +44,6 @@ def main():
             print([points[1], -points[0]])
 
 
-
-    t2 = time.time()
-    print(t2-t1)
 
 if __name__ == '__main__':
     main()
