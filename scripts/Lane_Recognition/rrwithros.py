@@ -4,23 +4,21 @@ import sys
 import cv2
 from sklearn.externals import joblib
 import RoadRecognition as rr
-import time
+
 
 def main():
 
-    zed, runtime_parameters = rr.ZED_SVO()  #ZED_live() is for live feed and ZED_SVO() is for loading an SVO from the commandline.
+    zed, runtime_parameters = rr.ZED_live()  #ZED_live() is for live feed and ZED_SVO() is for loading an SVO from the commandline.
     i = 0
     image = rr.core.PyMat()
     #depth = rr.core.PyMat()
     point_cloud = rr.core.PyMat()
     confidence = rr.core.PyMat()
-    classifier = joblib.load("./Road_classifier.pkl")
+    classifier = joblib.load("./Road_classifier.pkl") #Load Classifier created before.
 
-
-    #print("own data start \n")
-    #for j in range(60):             #Let the camera start up when using ZED_live
-        #zed.grab(runtime_parameters)
-    zed.set_svo_position(178)
+    for j in range(60):             #Let the camera start up when using ZED_live
+        zed.grab(runtime_parameters)
+    #zed.set_svo_position(178) #Jumping to a frame number in the SVO file.
     while i < 50:
         i = i + 1
         # A new image is available if grab() returns PySUCCESS
@@ -36,12 +34,12 @@ def main():
 
             feat_img = image.get_data()[:, : , :3]
             feat_col = feat_img[:704, :, :3]
-            classes = rr.classify(feat_col, point_cloud, classifier)
+            classes = rr.classify(feat_col, point_cloud, classifier)#Classify the pixels in the image
 
 
-            points = rr.compute_center(classes, feat_col, point_cloud)
+            points = rr.compute_center(classes, feat_col, point_cloud) #Computer center points of the recognized road
             points = np.asarray(points)/1000
-            print([points[1], -points[0]])
+            print([points[1], -points[0]]) #Print the center point for the anonymous pipe to read.
 
 
 
