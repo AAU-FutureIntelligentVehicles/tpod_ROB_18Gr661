@@ -33,7 +33,7 @@ def slide_window_helper(img, window_size=[64, 64]):
     window_list = []
     for j in range(x_windows):
         for i in range(y_windows):
-            window = [i*window_size_x, j*window_size_y, (i+1)*window_size_x, (j+1)*window_size_y]
+            window = [i*window_size_x, j*window_size_y, (i+1)*window_size_x, (j+1)*window_size_y, j, i]
             window_list.append(window)
 
     return window_list
@@ -48,9 +48,10 @@ def _ch(roi):
 #Takes an image as input and returns an image of the "same" shape containing the haralick features
 #so a 704px*1280px*3 colors image becomes a 704px*1280px*5 features image
 #The computation of the features themselves is multithreaded 
-def compute_haralick(crop_img):
+def compute_haralick(crop_img, windows = None):
     crop_img = np.array(crop_img)
-    windows = slide_window_helper(crop_img)
+    if (windows == None):
+        windows = slide_window_helper(crop_img)
     rois = []
     pool = mp.Pool(mp.cpu_count())
 
@@ -64,16 +65,20 @@ def compute_haralick(crop_img):
     haralick_features = pool.map(_ch, rois)
     pool.close()
     pool.join()
-    haralick_arr = np.array(haralick_features)
+    #haralick_arr = np.array(haralick_features)
     dims = crop_img.shape
     scaling_factor = [0.05423693486427112, 2258.078377174232,0.986424403324001,9114.763475900238,0.42569913950248545]
     #feature_weights = [0.5, 1.5, 1, 2, 1]
     #haralick_arr = haralick_arr*feature_weights
 
+    
+    window_countX = dims[0]//windowSize
+    window_countY = dims[1]//windowSize
+    haralick_arr = np.zeros((window_countX, window_countY, 5))
+    for window, result in zip(windows, haralick_features):
+        haralick_arr[window[4], window[5]] = result
     haralick_arr = haralick_arr / scaling_factor
-    window_count = dims[0]//windowSize
-
-    array = haralick_arr.reshape((window_count, -1, 5)).repeat(windowSize, axis = 0).repeat(windowSize, axis = 1)
+    array = haralick_arr.repeat(windowSize, axis = 0).repeat(windowSize, axis = 1)
 
     return array.astype(np.float32)
 
@@ -229,9 +234,12 @@ def show(classes, feat_col, point_cloud):
 
         for i in range(10):
             a = np.zeros((400, 800))
-            a[i*40:i*40+40, ...]=1
+            #a[i*40:i*40+40, ...]=1
+            cv2.circle(a, (400,0), (i+1)*40, 1, -1)
+            cv2.circle(a, (400,0), i*40, 0, -1)
+            cv2.rectangle(road_geometry,(0, 0),(1280, 40*i),(255,255,255),3)
             b=np.logical_and(road_geometry[..., 0], a).astype('uint8')
-            #cv2.rectangle(road_geometry,(0, 40*i),(800, 40),(0,255,0),1)
+            #cv2.rectangle(cont_img,(0, 600),(1280, 400),(255,255,255),6)
 
             road_cont = cv2.findContours(road_geometry[i*40:i*40+40,:,0].copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             M = cv2.moments(road_cont[0])
@@ -243,14 +251,14 @@ def show(classes, feat_col, point_cloud):
                 center_point[0] = center_point [0]*scaling_factor  - centering_factor
                 center_point[1] = center_point [1]*scaling_factor  + i*40*scaling_factor
                 center_points_mm.append(tuple(center_point))
-        print (center_points, center_points_mm)
+
 
         ori_centers = []
         for points in center_points_mm:
             cv2.circle(road_geometry, points, 5, (255, 0, 0), -1)
             ori_center = ori_lookup(point_cloud_, points)
-            print(ori_center)
-            cv2.circle(cont_img, ori_center, 5, (255, 0, 0), -1)           
+            #print(ori_center)
+            #cv2.circle(cont_img, ori_center, 5, (255, 0, 0), -1)           
             ori_centers.append(ori_center)
             
 
@@ -262,9 +270,9 @@ def show(classes, feat_col, point_cloud):
         
         approximation = np.asarray((svr_points[:,1]*svr_points[:,1]*polyapprox[0]+ svr_points[:,1]*polyapprox[1]+polyapprox[2], svr_points[:,1]), dtype='uint16').transpose()
         #print (approximation)
-        for points in zip(approximation[1:, :], approximation[:-1, :]):
+        #for points in zip(approximation[1:, :], approximation[:-1, :]):
             #print(points)
-            cv2.line(road_geometry, (points[0][0], points[0][1]), (points[1][0], points[1][1]), (0, 255, 0), 3)
+            #cv2.line(road_geometry, (points[0][0], points[0][1]), (points[1][0], points[1][1]), (0, 255, 0), 3)
 
 
         #cv2.line(road_geometry, (400, 0), (400, 170), (255, 0 , 125), 3)
@@ -316,14 +324,23 @@ def classify(image, point_cloud, classifier):
     #print (point_cloud_.shape)
     
     #extract the haralick features
-    haralick = compute_haralick(image).reshape((-1, 5))
+    windows = slide_window_helper(image)
+    depthroad = 1- g.is_road(point_cloud_)
+    new_windows = []
+    for window in windows:
+        if (depthroad[window[1]:window[3], window[0]:window[2]].sum().sum() > windowSize ** 2 / 16):
+            new_windows.append(window)
+        
+
+
+    haralick = compute_haralick(image, new_windows).reshape((-1, 5))
 
     #extract the color features
     feature = get_features(image).reshape((-1, 3))
     
     
     feature = np.concatenate((feature, haralick), 1)
-    depthroad = 1- g.is_road(point_cloud_)
+    
     #classifier(intercept_scaling = 0.2)
     classes = classifier.predict(feature)
     classes = classes.reshape(704, 1280)
