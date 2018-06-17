@@ -86,7 +86,7 @@ def compute_haralick(crop_img, windows = None):
 #calculates the color features.
 #all it does is reshape the image to a n_pixels*n_colors array
 #the part of the code past the first return statement is never run but is kept to
-#document the wrong way of doing it. It works but is a  lot slower than letting 
+#document. The wrong way of doing it. It works but is a  lot slower than letting 
 #numpy deal with it
 
 def get_features(image):
@@ -137,7 +137,7 @@ def compute_center(classes, feat_col, point_cloud):
 
         scaling_factor = 50 #convert back to milimetres
         centering_factor = 20000 #recenter the points
-        lower_limit_road = 3200 #These is the region ti search for the road
+        lower_limit_road = 3200 #These is the region to search for the road
         upper_limit_road = 3600 #They are also used as handle length, since they define the 
                                 #distance from the cart to the point
 
